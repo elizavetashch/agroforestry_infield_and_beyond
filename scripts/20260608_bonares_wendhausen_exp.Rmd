@@ -1,0 +1,295 @@
+---
+title: "BONARES Wendhausen"
+output: pdf_document
+date: "2026-06-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r pakcage load, include = FALSE}
+packages <- c("janitor" , "readr" ,"ggplot2", "dplyr", "tidyr", "corrplot", "naniar", "ggcorrplot",
+              "patchwork", "scales", "ggridges", "viridis", "GGally",
+              "knitr", "moments", "gridExtra", "RColorBrewer")
+
+lapply(packages, library, character.only = TRUE)
+
+```
+
+```{r load data, echo = FALSE}
+wendhausen_1518 <- read_csv("data/BONARES_Cropland agroforestry 2015-2018/SIGNAL.ID_7013_DATEN_WH_15_18.csv")
+wendhausen_1718 <- read_csv("data/BONARES_Cropland Agroforestry 2017 and 2018/signal.ID_7042_BIOMASSE_17_18_WH_280319.csv")
+wendhausen_1920 <- read_csv("data/BONARES_Cropland agroforestry 2019-2020/signal.ID_7069_DATEN_WENDHAUSEN_2019_20.csv")
+wendhausen_21 <- read_csv("data/BONARES_Cropland agroforestry 2021/signal.ID_7070_DATEN_WENDHAUSEN_2021.csv")
+wendhausen_22 <- read_csv("data/BONARES_Cropland agroforestry 2022/signal.ID_7071_DATEN_WENDHAUSEN_2022.csv")
+wendhausen_23 <- read_csv("data/BONARES_Cropland agroforestry 2023/signal.ID_7077_DATEN_WENDHAUSEN_2023_CR.csv")
+
+wendhausen <- list(
+  wendhausen_1518 = clean_names(wendhausen_1518), 
+  wendhausen_1718 = clean_names(wendhausen_1718), 
+  wendhausen_1920 = clean_names(wendhausen_1920), 
+  wendhausen_21 = clean_names(wendhausen_21), 
+  wendhausen_22 = clean_names(wendhausen_22), 
+  wendhausen_23 = clean_names(wendhausen_23))
+
+
+
+
+```
+
+```{r}
+
+# Compare columns across all Wendhausen datasets
+
+all_cols <- sort(unique(unlist(lapply(wendhausen, names))))
+
+col_table <- do.call(rbind, lapply(names(wendhausen), function(ds) {
+  present <- names(wendhausen[[ds]])
+  setNames(
+    as.data.frame(t(ifelse(all_cols %in% present, "yes", "no"))),
+    all_cols
+  ) |> cbind(Dataset = ds, row.names = NULL)
+}))
+
+col_table <- col_table[, c("Dataset", setdiff(names(col_table), "Dataset"))]
+print(col_table)
+
+```
+
+```{r merge data, echo = FALSE}
+
+
+# Standardise and merge all wendhausen datasets
+merged <- bind_rows(lapply(names(wendhausen), function(ds) {
+  df <- wendhausen[[ds]]
+  
+  # Lowercase all column names
+  names(df) <- tolower(names(df))
+  
+  # Merge lat/latitude → latitude, lon/longitude → longitude
+  if ("lat" %in% names(df) && !"latitude" %in% names(df))
+    df <- rename(df, latitude = lat)
+  if ("lon" %in% names(df) && !"longitude" %in% names(df))
+    df <- rename(df, longitude = lon)
+  
+  
+  # Merge ww and wheat 
+  ww_cols <- grep("^ww_", names(df), value = TRUE)
+  for (col in ww_cols) {
+    wheat_col <- sub("^ww_", "wheat_", col)
+    if (!wheat_col %in% names(df))
+      df <- rename(df, !!wheat_col := !!col)
+  }
+  
+  
+  # Drop unwanted columns
+  df <- select(df, -any_of(c("decomposition", "litter_dm", "objectid", "lat", "lon")))
+  
+  # Add origin column
+  df$origin <- ds
+  df
+}))
+
+# Move origin to first column
+merged <- select(merged, origin, everything())
+
+```
+
+```{r}
+
+merged_long <- merged %>%
+  pivot_longer(
+    cols = matches("^(or|wheat|straw|sm|sb)_"),
+    names_to  = c("crop", ".value"),
+     names_pattern = "^(or|wheat|straw|sm|sb)_(.*)",
+    names_transform = list(crop = as.factor)
+  )
+```
+
+```{r}
+summary(merged_long)
+```
+
+```{r}
+# Colour palette for crops
+crop_colors <- c("or" = "#E76F51", "wheat" = "#F4A261", "straw" = "#A8C686",
+                 "sm" = "#457B9D", "sb" = "#9B7EBD")
+
+# ── 1. DM per crop ────────────────────────────────────────────────────────────
+
+# exlude sb outlier
+merged_long <- merged_long %>%
+  filter(!(crop == "sb" & dm > 4e+14))
+
+# DM
+ggplot(merged_long %>% filter(!is.na(dm)), 
+       aes(x = factor(year), y = dm, fill = crop)) +
+  geom_boxplot(alpha = 0.8) +
+  facet_wrap(~ crop, scales = "free_y") +
+  scale_fill_manual(values = crop_colors) +
+  labs(title = "DM by crop and year", x = "Year", y = "DM") +
+  theme_minimal() + theme(legend.position = "none")
+
+
+ggplot(merged_long %>% filter(!is.na(dm)),
+       aes(x = factor(year), y = dm, fill = crop)) +
+  geom_boxplot(alpha = 0.8, position = position_dodge(width = 0.8)) +
+  scale_fill_manual(values = crop_colors) +
+  labs(title = "DM by crop and year", x = "Year", y = "DM") +
+  theme_minimal()
+
+
+# DM straw (if column exists)
+if ("dm_straw" %in% names(merged_long)) {
+  ggplot(merged_long %>% filter(!is.na(dm_straw)),
+         aes(x = factor(year), y = dm_straw, fill = crop)) +
+    geom_boxplot(alpha = 0.8) +
+    facet_wrap(~ crop, scales = "free_y") +
+    scale_fill_manual(values = crop_colors) +
+    labs(title = "DM straw by crop and year", x = "Year", y = "DM straw") +
+    theme_minimal() + theme(legend.position = "none")
+}
+
+
+```
+
+
+
+```{r}
+# ── 2. Which crop was harvested in which year ─────────────────────────────────
+
+merged_long %>%
+  filter(!is.na(dm)) %>%
+  distinct(crop, year) %>%
+  ggplot(aes(x = factor(year), y = crop, fill = crop)) +
+  geom_tile(color = "white", linewidth = 0.8) +
+  scale_fill_manual(values = crop_colors) +
+  labs(title = "Crop × year harvest overview", x = "Year", y = "Crop") +
+  theme_minimal() + theme(legend.position = "none")
+
+
+```
+
+```{r}
+# ── 3. Orientation per crop ───────────────────────────────────────────────────
+
+merged_long %>%
+  filter(!is.na(orientation)) %>%
+  ggplot(aes(x = orientation, fill = orientation)) +
+  geom_bar() +
+  facet_wrap(~ crop) +
+  labs(title = "Orientation by crop", x = "Orientation", y = "Count") +
+  theme_minimal() + theme(legend.position = "none")
+
+
+```
+
+```{r}
+# ── 4. Orientation overall ────────────────────────────────────────────────────
+
+merged_long %>%
+  filter(!is.na(orientation)) %>%
+  ggplot(aes(x = orientation, fill = orientation)) +
+  geom_bar() +
+  labs(title = "Orientation — full dataset", x = "Orientation", y = "Count") +
+  theme_minimal() + theme(legend.position = "none")
+
+
+```
+
+
+
+```{r}
+# ── 5. Soil type per crop + overall ──────────────────────────────────────────
+
+merged_long %>%
+  filter(!is.na(soil_type)) %>%
+  ggplot(aes(x = soil_type, fill = soil_type)) +
+  geom_bar() +
+  facet_wrap(~ crop) +
+  labs(title = "Soil type by crop", x = "Soil type", y = "Count") +
+  theme_minimal() + theme(legend.position = "none", 
+                          axis.text.x = element_text(angle = 45, hjust = 1))
+
+merged_long %>%
+  filter(!is.na(soil_type)) %>%
+  ggplot(aes(x = soil_type, fill = soil_type)) +
+  geom_bar() +
+  labs(title = "Soil type — full dataset", x = "Soil type", y = "Count") +
+  theme_minimal() + theme(legend.position = "none",
+                          axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+
+```{r}
+# ── 6. Plot per crop + overall ────────────────────────────────────────────────
+
+merged_long %>%
+  filter(!is.na(plot)) %>%
+  ggplot(aes(x = factor(plot), fill = crop)) +
+  geom_bar() +
+  facet_wrap(~ crop) +
+  scale_fill_manual(values = crop_colors) +
+  labs(title = "Plot by crop", x = "Plot", y = "Count") +
+  theme_minimal() + theme(legend.position = "none")
+
+merged_long %>%
+  filter(!is.na(plot)) %>%
+  ggplot(aes(x = factor(plot), fill = crop)) +
+  geom_bar() +
+  scale_fill_manual(values = crop_colors) +
+  labs(title = "Plot — full dataset", x = "Plot", y = "Count") +
+  theme_minimal()
+```
+
+```{r plots for relationships, warning=FALSE}
+# 1. Overall
+ggplot(merged_long %>% filter(!is.na(dm), !is.na(distance_to_tree_strip)),
+       aes(x = distance_to_tree_strip, y = dm)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess", se = TRUE, color = "#E76F51") +
+  labs(title = "DM vs distance to tree strip", x = "Distance (m)", y = "DM") +
+  theme_minimal()
+
+# 2. By crop
+ggplot(merged_long %>% filter(!is.na(dm), !is.na(distance_to_tree_strip)),
+       aes(x = distance_to_tree_strip, y = dm, color = crop, fill = crop)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess", se = TRUE) +
+  facet_wrap(~ crop, scales = "free_y") +
+  scale_color_manual(values = crop_colors) +
+  scale_fill_manual(values = crop_colors) +
+  labs(title = "DM vs distance — by crop", x = "Distance (m)", y = "DM") +
+  theme_minimal() + theme(legend.position = "none") + 
+  theme(
+  strip.text = element_text(size = 16),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
+
+# 3. By crop + orientation
+ggplot(merged_long %>% filter(!is.na(dm), !is.na(distance_to_tree_strip), !is.na(orientation)),
+       aes(x = distance_to_tree_strip, y = dm, color = orientation, fill = orientation)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess", se = TRUE) +
+  facet_wrap(~ crop, scales = "free_y") +
+  labs(title = "DM vs distance — by crop + orientation", x = "Distance (m)", y = "DM") +
+  theme_minimal()+ 
+  theme(
+  strip.text = element_text(size = 16),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
+
+# 4. By orientation
+ggplot(merged_long %>% filter(!is.na(dm), !is.na(distance_to_tree_strip), !is.na(orientation)),
+       aes(x = distance_to_tree_strip, y = dm, color = orientation, fill = orientation)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess", se = TRUE) +
+  labs(title = "DM vs distance — by orientation", x = "Distance (m)", y = "DM") +
+  theme_minimal()
+```
+
