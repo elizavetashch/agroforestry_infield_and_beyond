@@ -37,6 +37,55 @@ df$Crop <- as.factor(df$Crop)
 df$Aspect <- as.factor(df$Aspect)
 df$Treatment <- as.factor(df$Treatment)
 
+# Design Visualisation ----------------------------------------------------
+
+design_koch25 <- koch25 %>% distinct(year, block, id, treatment, p_dist)
+koch25 %>% 
+  count(block, id, treatment) %>%
+  arrange(block, id)
+
+design_koch25 %>%
+  count(year, block, p_dist, treatment) %>%
+  tidyr::pivot_wider(
+    names_from = treatment,
+    values_from = n,
+    values_fill = 0
+  )
+
+design_koch25 %>%
+  ggplot(aes(
+    x = factor(year),
+    y = factor(id),
+    fill = treatment
+  )) +
+  geom_tile(color = "white") +
+  facet_wrap(~block, scales = "free_y") +
+  theme_minimal()
+
+ggplot(design_koch25,
+       aes(x = factor(year),
+           y = factor(id),
+           fill = p_dist)) +
+  geom_tile() +
+  geom_text(aes(label = treatment),
+            size = 2) +
+  #facet_wrap(~block, scales = "free_y") +
+  scale_fill_viridis_c() +
+  theme_minimal()
+
+
+design_map <- koch25 %>%
+  distinct(year, block, id, treatment, p_dist, lat, long)
+
+ggplot(design_map,
+       aes(long, lat,
+           color = treatment,
+           size = p_dist)) +
+  geom_point(alpha = 0.8) +
+  #facet_grid(year ~ block) +
+  coord_equal() +
+  theme_bw()
+
 # Step 1: Are there outliers in Y and X?  ---------------------------------
 plot(X)
 ggplot(df, aes(x = Crop, y = Yield_wweight, color = Crop)) +
@@ -60,6 +109,8 @@ df %>%
   filter(prop_missing > 0)  %>% 
   arrange(desc(prop_missing))  %>% 
   print(n = Inf)
+
+
 
 
 # Step 5: Is there collinearity among the covariates? ---------------------
