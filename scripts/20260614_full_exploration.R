@@ -7,11 +7,22 @@ rm(list=ls())
 # Packages ----------------------------------------------------------------
 
 library(janitor)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(sf)
+library(ggplot2)
+library(rnaturalearth)
+
+
 
 # Koch 2025 ---------------------------------------------------------------
 
 koch25 <- readr::read_delim("data/Koch25/yields_wintercrops.csv", delim = ";", locale = locale(decimal_mark = ","))
 koch25 <- clean_names(koch25)
+
+koch25$dataID <- "koch25"
+
 # Paut 2023 ---------------------------------------------------------------
 
 # not german 
@@ -87,6 +98,8 @@ merged_long <- merged %>%
 # -------------------------------------------------------------------------
 
 wendhausen <- merged_long
+wendhausen$dataID <- "wendhausen"
+
 rm(merged, merged_long, wendhausen_1518, wendhausen_1718, wendhausen_1920, wendhausen_21, wendhausen_22, wendhausen_23)
 
 
@@ -96,6 +109,12 @@ hessen <- readxl::read_excel("data/ZALF_Hessen_2122/AFGH1_Yield_All.xlsx")
 
 hessen <- janitor::clean_names(hessen)
 
+hessen <- hessen %>%
+  mutate(
+    date = as.Date(as.character(date)),
+    year = format(date, "%Y"),
+    year = as.numeric(year)
+  )
 
 hessen <- hessen %>% 
   mutate(site = factor(site),
@@ -111,6 +130,7 @@ hessen <- hessen %>%
          direction = factor(direction))
 
 gladbacherhof <- hessen %>% filter(site == "GH1")
+gladbacherhof$dataID <- "gladbacherhof"
 
 
 
@@ -118,7 +138,7 @@ gladbacherhof <- hessen %>% filter(site == "GH1")
 # Bremsberg4 ----------------------------------------------------------------------
 
 bremsberg <- hessen %>% filter(site == "Bremsberg4")
-
+bremsberg$dataID <- "bremsberg"
 
 # Mariensee ---------------------------------------------------------------
 
@@ -143,12 +163,15 @@ mariensee  %>%  count(year)
 
 m17 <- mariensee  %>% 
   filter(year == 2017) 
-  
+
+mariensee$dataID <- "mariensee"
+
 # Dornburg ----------------------------------------------------------------
 dornburg <- read_csv("data/Bonares_Dornburg/signal.ID_7004_PROD_D_2016_V2.csv")
 dornburg <- clean_names(dornburg)
 
 str(dornburg)
+dornburg$dataID <- "dornburg"
 
 # Reiffenhausen -----------------------------------------------------------
 reiffenhausen <- read_csv("data/BONARES_Reiffenhausen/signal.ID_7039_REIFFENHAUSEN_BIOMASS_DATA_V2.csv")
@@ -159,6 +182,7 @@ str(reiffenhausen)
 reiffenhausen$lat <- 51.41
 reiffenhausen$long <- 9.98
 
+reiffenhausen$dataID <- "reiffenhausen"
 
 # For all rename lat and long ---------------------------------------------
 
@@ -183,22 +207,16 @@ str(reiffenhausen)
 # Plot all fields ---------------------------------------------------------
 
 coords <- bind_rows(
-  koch25      |> select(lat, long) |> slice(1),
-  wendhausen  |> select(lat, long) |> slice(1),
-  gladbacherhof |> select(lat, long) |> slice(1),
-  bremsberg   |> select(lat, long) |> slice(1),
-  mariensee   |> select(lat, long) |> slice(1),
-  dornburg    |> select(lat, long) |> slice(1),
-  reiffenhausen |> select(lat, long) |> slice(1)
-) |> distinct()
+  koch25       %>%  select(dataID, lat, long) %>% slice(1),
+  wendhausen  %>% select(dataID, lat, long) %>% slice(1),
+  gladbacherhof %>% select(dataID, lat, long) %>%slice(1),
+  bremsberg   %>% select(dataID, lat, long) %>% slice(1),
+  mariensee   %>% select(dataID, lat, long) %>% slice(1),
+  dornburg    %>% select(dataID, lat, long) %>% slice(1),
+  reiffenhausen %>% select(dataID, lat, long) %>% slice(1)
+) %>% distinct()
 
 coords
-
-
-library(sf)
-library(ggplot2)
-library(rnaturalearth)
-library(dplyr)
 
 germany <- ne_countries(country = "Germany", returnclass = "sf")
 
@@ -211,5 +229,92 @@ coords_sf <- st_as_sf(
 ggplot() +
   geom_sf(data = germany, fill = "grey95", color = "black") +
   geom_sf(data = coords_sf, size = 3) +
-  coord_sf() +
+  geom_sf_text(
+    data = coords_sf,
+    aes(label = dataID),
+    nudge_x = 0.15,  # adjust position horizontally
+    nudge_y = 0.2,  # adjust position vertically
+    size = 3
+  ) +  
   theme_minimal()
+
+
+# Details on Datasets -----------------------------------------------------
+
+dimkoch25 <- dim(koch25)
+str(koch25)
+
+# year (num)
+# crop
+# yield_wweight
+# p_dist (is the distance from tree) 
+hist(koch25$p_dist)
+# design elements: id, block, treatment , aspect
+# aspect: E, W 
+koch25$aspect <- as.factor(koch25$aspect)
+levels(koch25$aspect)
+
+dimwend <- dim(wendhausen)
+str(wendhausen)
+# year (num)
+# crop
+# orientation: lee, luv 
+# distance to tree strip
+
+
+dimglad <- dim(gladbacherhof)
+str(gladbacherhof)
+# year (num) 
+# crop 
+# biomass_kg_m2, grain_kg_m2, total_kg_m2
+# design: row, transect, direction, 
+# distance ( is distance to tree) 
+
+# Bind Rows ---------------------------------------------------------------
+
+allfields <- bind_rows(
+  koch25,  wendhausen, gladbacherhof, bremsberg,
+  mariensee, dornburg, reiffenhausen) 
+
+
+
+# details Koch 25 ----------------------------------------------------------
+
+design_koch25 <- koch25 %>% 
+  distinct(year, block, id, treatment, p_dist, crop, lat,long)
+
+koch25 %>%
+  count(block, id, treatment) %>%
+  arrange(block, id)
+
+design_koch25 %>%
+  count(year, block, p_dist, treatment) %>%
+  tidyr::pivot_wider(
+    names_from = treatment,
+    values_from = n,
+    values_fill = 0
+  )
+
+# TREATMENT VISUALISATION:
+ggplot(design_koch25,
+       aes(long, lat,
+           color = treatment,
+           size = p_dist)) +
+  geom_point(alpha = 0.8) +
+  #facet_wrap(~year) +
+  coord_equal() +
+  theme_bw()
+
+
+# CROP ROTATION:
+ggplot(design_koch25,
+       aes(long, lat,
+           color = crop,
+           size = p_dist)) +
+  geom_point(alpha = 0.8) +
+  facet_wrap(~year) +
+  coord_equal() +
+  theme_bw()
+
+
+

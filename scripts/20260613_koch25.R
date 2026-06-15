@@ -39,8 +39,10 @@ df$Treatment <- as.factor(df$Treatment)
 
 # Design Visualisation ----------------------------------------------------
 
-design_koch25 <- koch25 %>% distinct(year, block, id, treatment, p_dist)
-koch25 %>% 
+design_koch25 <- koch25 %>% 
+  distinct(year, block, id, treatment, p_dist, crop, lat,long)
+
+koch25 %>%
   count(block, id, treatment) %>%
   arrange(block, id)
 
@@ -52,37 +54,24 @@ design_koch25 %>%
     values_fill = 0
   )
 
-design_koch25 %>%
-  ggplot(aes(
-    x = factor(year),
-    y = factor(id),
-    fill = treatment
-  )) +
-  geom_tile(color = "white") +
-  facet_wrap(~block, scales = "free_y") +
-  theme_minimal()
-
+# TREATMENT VISUALISATION:
 ggplot(design_koch25,
-       aes(x = factor(year),
-           y = factor(id),
-           fill = p_dist)) +
-  geom_tile() +
-  geom_text(aes(label = treatment),
-            size = 2) +
-  #facet_wrap(~block, scales = "free_y") +
-  scale_fill_viridis_c() +
-  theme_minimal()
-
-
-design_map <- koch25 %>%
-  distinct(year, block, id, treatment, p_dist, lat, long)
-
-ggplot(design_map,
        aes(long, lat,
            color = treatment,
            size = p_dist)) +
   geom_point(alpha = 0.8) +
-  #facet_grid(year ~ block) +
+  #facet_wrap(~year) +
+  coord_equal() +
+  theme_bw()
+
+
+# CROP ROTATION:
+ggplot(design_koch25,
+       aes(long, lat,
+           color = crop,
+           size = p_dist)) +
+  geom_point(alpha = 0.8) +
+  facet_wrap(~year) +
   coord_equal() +
   theme_bw()
 
