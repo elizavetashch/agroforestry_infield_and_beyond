@@ -172,6 +172,7 @@ dornburg <- clean_names(dornburg)
 
 str(dornburg)
 dornburg$dataID <- "dornburg"
+dornburg$year <- 2016
 
 # Reiffenhausen -----------------------------------------------------------
 reiffenhausen <- read_csv("data/BONARES_Reiffenhausen/signal.ID_7039_REIFFENHAUSEN_BIOMASS_DATA_V2.csv")
@@ -181,6 +182,8 @@ str(reiffenhausen)
 # longitude and latitude are taken from the metadata
 reiffenhausen$lat <- 51.41
 reiffenhausen$long <- 9.98
+reiffenhausen$year <- 2016
+
 
 reiffenhausen$dataID <- "reiffenhausen"
 

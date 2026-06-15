@@ -58,6 +58,35 @@ df$Crop <- as.factor(df$Crop)
 df$Aspect <- as.factor(df$Aspect)
 df$Treatment <- as.factor(df$Treatment)
 
+#  of Factor variables -----------------------------------------------------------
+
+
+library(dplyr)
+
+sumobs <- function(factor) {
+  printout <- df %>%
+    group_by(.data[[factor]]) %>%
+    summarise(
+      min    = min(biomass_kg_m2, na.rm = TRUE),
+      max    = max(biomass_kg_m2, na.rm = TRUE),
+      mean   = mean(biomass_kg_m2, na.rm = TRUE),
+      median = median(biomass_kg_m2, na.rm = TRUE),
+      sd     = sd(biomass_kg_m2, na.rm = TRUE),
+      n      = sum(!is.na(biomass_kg_m2)),
+      .groups = "drop"
+    )
+  
+  cat("\n\nFactor:", factor, "\n")
+  print(printout)
+}
+
+factors <- names(df)[sapply(df, is.factor)]
+
+lapply(factors, sumobs)
+
+
+
+# Design Cross Tabulation -------------------------------------------------
 
 
 

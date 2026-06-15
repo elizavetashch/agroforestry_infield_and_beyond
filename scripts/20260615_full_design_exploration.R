@@ -452,3 +452,27 @@ ggplot(reiffenhausen,
   labs(title = "Reiffenhausen: Treatment Design (jittered - single site coordinate)")
 
 # No crop rotation plot (wide format, no year/crop columns)
+
+
+
+# Years Exploration  ------------------------------------------------------
+
+datasets <- list(
+  koch25        = koch25,
+  wendhausen    = wendhausen,
+  gladbacherhof = gladbacherhof,
+  bremsberg     = bremsberg,
+  mariensee     = mariensee,
+  dornburg      = dornburg,
+  reiffenhausen = reiffenhausen
+)
+
+
+levels(as.factor(koch25$year))
+levels(as.factor(wendhausen$year))
+levels(as.factor(gladbacherhof$year))
+levels(as.factor(bremsberg$year))
+levels(as.factor(mariensee$year))
+levels(as.factor(dornburg$year))
+levels(as.factor(reiffenhausen$year))
+
