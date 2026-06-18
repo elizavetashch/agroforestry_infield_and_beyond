@@ -7,6 +7,8 @@
 <ins>Source: </ins> 
 ```
 https://www.bonares.de/service-portal/projects/signal?locale=en
+
+https://agroforst-info.de/signal/#toggle-id-1
 ```
 
 - SIGNAL has studied rather simple **alley cropping** systems consisting of **poplar rows** grown as **short rotation plantations** in combination with a **conventional crop rotation**. **The scientists compared these agroforestry systems with the same crop rotation without trees and evaluated the following ecosystem functions**: Yield, carbon sequestration and greenhouse gas mitigation, soil nutrient cycling and water regulation, biodiversity and erosion control.
