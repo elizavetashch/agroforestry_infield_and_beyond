@@ -113,21 +113,21 @@ wendhausen <- merged_long
 rm(merged, merged_long, wendhausen_1518, wendhausen_1718, wendhausen_1920, wendhausen_21, wendhausen_22, wendhausen_23)
 
 
-# Hessen/Gladbacherhof -----------------------------------------------------------
+# gladbacherhof/Gladbacherhof -----------------------------------------------------------
 
-hessen <- readxl::read_excel("data/ZALF_Hessen_2122/AFGH1_Yield_All.xlsx")
-hessen$data_id <- "hessen"
+gladbacherhof <- readxl::read_excel("data/ZALF_Hessen_2122/AFGH1_Yield_All.xlsx")
+gladbacherhof$data_id <- "gladbacherhof"
 
-hessen <- janitor::clean_names(hessen)
+gladbacherhof <- janitor::clean_names(gladbacherhof)
 
-hessen <- hessen %>%
+gladbacherhof <- gladbacherhof %>%
   mutate(
     date = as.Date(as.character(date)),
     year = format(date, "%Y"),
     year = as.numeric(year)
   )
 # 
-# hessen <- hessen %>% 
+# gladbacherhof <- gladbacherhof %>% 
 #   mutate(site = factor(site),
 #          date = factor(date),
 #          crop = factor(crop),
@@ -140,15 +140,15 @@ hessen <- hessen %>%
 #          transect = factor(transect), 
 #          direction = factor(direction))
 
-gladbacherhof <- hessen %>% filter(site == "GH1")
+gladbacherhof <- gladbacherhof %>% filter(site == "GH1")
 gladbacherhof$data_id <- "gladbacherhof"
 
 
 
 
-# Bremsberg4 ----------------------------------------------------------------------
+# Bremsberg ----------------------------------------------------------------------
 
-bremsberg <- hessen %>% filter(site == "Bremsberg4")
+bremsberg <- gladbacherhof %>% filter(site == "Bremsberg")
 bremsberg$data_id <- "bremsberg"
 
 # Mariensee ---------------------------------------------------------------
@@ -186,6 +186,7 @@ dornburg16 <- clean_names(dornburg16)
 str(dornburg16)
 dornburg16$data_id <- "dornburg16"
 dornburg16$year <- 2016
+names(dornburg16)
 
 # Reiffenhausen -----------------------------------------------------------
 reiffenhausen16 <- read_csv("data/BONARES_Reiffenhausen16/signal.ID_7039_REIFFENHAUSEN_BIOMASS_DATA_V2.csv")
@@ -213,6 +214,7 @@ levels(dornburg1823$site)
 
 dornburg1823$data_id <- "dornburg1823"
 dornburg1823 <- clean_names(dornburg1823)
+
 
 # SIGNAL 2016 -------------------------------------------------------------
 
@@ -258,23 +260,62 @@ forst1920 <- clean_names(forst1920)
 
 # For all rename lat and long ---------------------------------------------
 
+##### Koch 25
 names(koch25) # already lat and long
 
+##### Wendhausen
 (nameswendhausen <- names(wendhausen))
 wendhausen <- rename(wendhausen, lat = latitude, long = longitude)
 
-(nameshessen <- names(hessen))
-hessen <- rename(hessen, lat = lat, long = lon)
 
+##### Gladbacherhof
+(namesgladbacherhof <- names(gladbacherhof))
+gladbacherhof <- rename(gladbacherhof, lat = lat, long = lon)
 
+##### Mariensee
 (namesmariensee <- names(mariensee))
 mariensee <- rename(mariensee, lat = latitude, long = longitude)
 
+##### Dornburg 16
 (namesdornburg16 <- names(dornburg16))
 
+##### Dornburg 18-23
 (namesdornburg1823 <- names(dornburg1823))
 
+# assign coordinates
+dornburg1823$lat[dornburg1823$site %in% c(
+  "Dornburg", "Dornburg_normal", "Dornburg_reduced"
+)] <- 51.011111
+
+dornburg1823$long[dornburg1823$site %in% c(
+  "Dornburg", "Dornburg_normal", "Dornburg_reduced"
+)] <- 11.646111
+
+dornburg1823$lat[dornburg1823$site == "Vechta"] <- 52.758056
+dornburg1823$long[dornburg1823$site == "Vechta"] <- 8.534722
+# check: 
+(namesdornburg1823 <- names(dornburg1823))
+
+##### Signal 16
 (namessignal16 <- names(signal16))
+# coordinates are takem from a publication 
+# van Ramshorst, J.G.V., Callejas-Rodelas, J.Á., Knohl, A. et al. Comparison of ecosystem-scale carbon fluxes at agroforestry and adjacent monocropping sites in Germany. Agroforest Syst 99, 147 (2025). https://doi.org/10.1007/s10457-025-01244-2
+
+signal16 <- signal16 %>%
+  mutate(
+    lat = case_when(
+      site == "Dornburg" ~ 51.013583,
+      site == "Forst" ~ 51.788500,
+      site %in% c("Mariensee Anthrosol", "Mariensee Histosol") ~ 52.564500,
+      site == "Wendhausen" ~ 52.333306
+    ),
+    long = case_when(
+      site == "Dornburg" ~ 11.644000,
+      site == "Forst" ~ 14.634083,
+      site %in% c("Mariensee Anthrosol", "Mariensee Histosol") ~ 9.464444,
+      site == "Wendhausen" ~ 10.632333
+    )
+  )
 
 (namesforst1920 <- names(forst1920))
 forst1920 <- rename(forst1920, lat = y, long = x)
@@ -285,10 +326,11 @@ coords <- bind_rows(
   koch25       %>%  select(data_id, lat, long) %>% slice(1),
   wendhausen  %>% select(data_id, lat, long) %>% slice(1),
   gladbacherhof %>% select(data_id, lat, long) %>%slice(1),
-  bremsberg   %>% select(data_id, lat, long) %>% slice(1),
   mariensee   %>% select(data_id, lat, long) %>% slice(1),
-  dornburg    %>% select(data_id, lat, long) %>% slice(1),
-  reiffenhausen %>% select(data_id, lat, long) %>% slice(1)
+  dornburg16    %>% select(data_id, lat, long) %>% slice(1),
+  reiffenhausen16 %>% select(data_id, lat, long) %>% slice(1),
+  signal16 %>% select(data_id, site, lat, long) %>% distinct(),
+  dornburg1823 %>% select(data_id, site, lat, long) %>% distinct()
 ) %>% distinct()
 
 coords
@@ -394,7 +436,7 @@ koch25$id <- as.factor(koch25$id)
 
 str(wendhausen)
 
-str(hessen)
+str(gladbacherhof)
 
 str(mariensee)
 
@@ -411,7 +453,7 @@ str(forst1920)
 forst1920$id <- as.factor(forst1920$id)
 
 df <- bind_rows(
-  koch25,  wendhausen, hessen, mariensee, dornburg16, 
+  koch25,  wendhausen, gladbacherhof, mariensee, dornburg16, 
   dornburg1823, reiffenhausen16, signal16, forst1920) 
 
 
@@ -445,7 +487,7 @@ df |>
 datdf <- 
 df %>% 
   filter(!is.na(date))
-# its Hessen and Forst
+# its gladbacherhof and Forst
 
 df$year[is.na(df$year)] <- df$harvest_year[is.na(df$year)]
 
