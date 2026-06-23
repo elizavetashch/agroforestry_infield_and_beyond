@@ -19,9 +19,15 @@ library(rnaturalearth)
 # Koch 2025 ---------------------------------------------------------------
 
 koch25 <- readr::read_delim("data/Koch25/yields_wintercrops.csv", delim = ";", locale = locale(decimal_mark = ","))
-koch25 <- clean_names(koch25)
+koch25$data_id <- "koch25"
 
-koch25$dataID <- "koch25"
+koch25 <- janitor::clean_names(koch25)
+
+names(koch25)
+koch25$x1 <- NULL
+
+nameskoch25 <- names(koch25)
+
 
 # Paut 2023 ---------------------------------------------------------------
 
@@ -35,11 +41,23 @@ koch25$dataID <- "koch25"
 # Wendhausen  -------------------------------------------------------------
 
 wendhausen_1518 <- read_csv("data/BONARES_Cropland agroforestry 2015-2018/SIGNAL.ID_7013_DATEN_WH_15_18.csv")
+wendhausen_1518$data_id <- "wendhausen1518"
+
 wendhausen_1718 <- read_csv("data/BONARES_Cropland Agroforestry 2017 and 2018/signal.ID_7042_BIOMASSE_17_18_WH_280319.csv")
+wendhausen_1718$data_id <- "wendhausen1718"
+
 wendhausen_1920 <- read_csv("data/BONARES_Cropland agroforestry 2019-2020/signal.ID_7069_DATEN_WENDHAUSEN_2019_20.csv")
+wendhausen_1920$data_id <- "wendhausen1920"
+
 wendhausen_21 <- read_csv("data/BONARES_Cropland agroforestry 2021/signal.ID_7070_DATEN_WENDHAUSEN_2021.csv")
+wendhausen_21$data_id <- "wendhausen21"
+
 wendhausen_22 <- read_csv("data/BONARES_Cropland agroforestry 2022/signal.ID_7071_DATEN_WENDHAUSEN_2022.csv")
+wendhausen_22$data_id <- "wendhausen22"
+
 wendhausen_23 <- read_csv("data/BONARES_Cropland agroforestry 2023/signal.ID_7077_DATEN_WENDHAUSEN_2023_CR.csv")
+wendhausen_23$data_id <- "wendhausen23"
+
 
 wendhausen <- list(
   wendhausen_1518 = clean_names(wendhausen_1518), 
@@ -76,15 +94,8 @@ merged <- bind_rows(lapply(names(wendhausen), function(ds) {
   
   # Drop unwanted columns
   df <- select(df, -any_of(c("decomposition", "litter_dm", "objectid", "lat", "lon")))
-  
-  # Add origin column
-  df$origin <- ds
-  df
+
 }))
-
-# Move origin to first column
-merged <- select(merged, origin, everything())
-
 
 merged_long <- merged %>%
   pivot_longer(
@@ -98,14 +109,14 @@ merged_long <- merged %>%
 # -------------------------------------------------------------------------
 
 wendhausen <- merged_long
-wendhausen$dataID <- "wendhausen"
 
 rm(merged, merged_long, wendhausen_1518, wendhausen_1718, wendhausen_1920, wendhausen_21, wendhausen_22, wendhausen_23)
 
 
-# Gladbacherhof -----------------------------------------------------------
+# Hessen/Gladbacherhof -----------------------------------------------------------
 
 hessen <- readxl::read_excel("data/ZALF_Hessen_2122/AFGH1_Yield_All.xlsx")
+hessen$data_id <- "hessen"
 
 hessen <- janitor::clean_names(hessen)
 
@@ -115,22 +126,22 @@ hessen <- hessen %>%
     year = format(date, "%Y"),
     year = as.numeric(year)
   )
-
-hessen <- hessen %>% 
-  mutate(site = factor(site),
-         date = factor(date),
-         crop = factor(crop),
-         db_site_id = factor(db_site_id),
-         db_site_name = factor(db_site_name),
-         sample_name_db = factor(sample_name_db),
-         sample_name_field = factor(sample_name_field),
-         sample_ordering = factor(sample_ordering),
-         row = factor(row),
-         transect = factor(transect), 
-         direction = factor(direction))
+# 
+# hessen <- hessen %>% 
+#   mutate(site = factor(site),
+#          date = factor(date),
+#          crop = factor(crop),
+#          db_site_id = factor(db_site_id),
+#          db_site_name = factor(db_site_name),
+#          sample_name_db = factor(sample_name_db),
+#          sample_name_field = factor(sample_name_field),
+#          sample_ordering = factor(sample_ordering),
+#          row = factor(row),
+#          transect = factor(transect), 
+#          direction = factor(direction))
 
 gladbacherhof <- hessen %>% filter(site == "GH1")
-gladbacherhof$dataID <- "gladbacherhof"
+gladbacherhof$data_id <- "gladbacherhof"
 
 
 
@@ -138,12 +149,16 @@ gladbacherhof$dataID <- "gladbacherhof"
 # Bremsberg4 ----------------------------------------------------------------------
 
 bremsberg <- hessen %>% filter(site == "Bremsberg4")
-bremsberg$dataID <- "bremsberg"
+bremsberg$data_id <- "bremsberg"
 
 # Mariensee ---------------------------------------------------------------
 
 mariensee1719 <- read_csv("data/Mariensee1719/signal.ID_7041_BIOMASSE_17_18_MS_280319.csv")
+mariensee1719$data_id <- "mariensee1719"
+
 mariensee1517 <- read_csv("data/Mariensee1517/signal.ID_7008_Gras_Laub_Holz_MS_2015_2016_2017.csv")
+mariensee1517$data_id <- "mariensee1517"
+
 
 mariensee1719 <- clean_names(mariensee1719)
 mariensee1517 <- clean_names(mariensee1517)
@@ -164,59 +179,116 @@ mariensee  %>%  count(year)
 m17 <- mariensee  %>% 
   filter(year == 2017) 
 
-mariensee$dataID <- "mariensee"
-
 # Dornburg ----------------------------------------------------------------
-dornburg <- read_csv("data/Bonares_Dornburg/signal.ID_7004_PROD_D_2016_V2.csv")
-dornburg <- clean_names(dornburg)
+dornburg16 <- read_csv("data/Bonares_Dornburg16/signal.ID_7004_PROD_D_2016_V2.csv")
+dornburg16 <- clean_names(dornburg16)
 
-str(dornburg)
-dornburg$dataID <- "dornburg"
-dornburg$year <- 2016
+str(dornburg16)
+dornburg16$data_id <- "dornburg16"
+dornburg16$year <- 2016
 
 # Reiffenhausen -----------------------------------------------------------
-reiffenhausen <- read_csv("data/BONARES_Reiffenhausen/signal.ID_7039_REIFFENHAUSEN_BIOMASS_DATA_V2.csv")
-reiffenhausen <- clean_names(reiffenhausen)
+reiffenhausen16 <- read_csv("data/BONARES_Reiffenhausen16/signal.ID_7039_REIFFENHAUSEN_BIOMASS_DATA_V2.csv")
+reiffenhausen16 <- clean_names(reiffenhausen16)
 
-str(reiffenhausen)
+str(reiffenhausen16)
 # longitude and latitude are taken from the metadata
-reiffenhausen$lat <- 51.41
-reiffenhausen$long <- 9.98
-reiffenhausen$year <- 2016
+reiffenhausen16$lat <- 51.41
+reiffenhausen16$long <- 9.98
+reiffenhausen16$year <- 2016
 
 
-reiffenhausen$dataID <- "reiffenhausen"
+reiffenhausen16$data_id <- "reiffenhausen16"
+
+# Dornburg 18-23 ----------------------------------------------------------
+
+
+dornburg1823 <- read_csv("data/BONARES_DornburgVechta1823/signal.ID_7088_CROP_YIELD.csv")
+names(dornburg1823)
+
+
+
+dornburg1823$site <- as.factor(dornburg1823$site)
+levels(dornburg1823$site)
+
+dornburg1823$data_id <- "dornburg1823"
+dornburg1823 <- clean_names(dornburg1823)
+
+# SIGNAL 2016 -------------------------------------------------------------
+
+signal16 <- read_csv("data/BONARES_SIGNAL16/signal.ID_7048_BIOMASSES_SIGNAL_PROJECT_V1_APR_08_2020.csv")
+names(signal16)
+(signal16)
+
+signal16$site <- as.factor(signal16$site)
+levels(signal16$site)
+
+signal16$data_id <- "signal16"
+signal16 <- clean_names(signal16)
+
+
+# Forst 2019-2020 ---------------------------------------------------------
+forst1920 <- read_csv("data/BONARES_Forst1920/signal.ID_7060_CROP_YIELDS_FORST_2019_2020.csv")
+
+names(forst1920)
+str(forst1920)
+
+forst1920 <- forst1920 %>%
+  mutate(
+    date = as.Date(as.character(date)),
+    year = format(date, "%Y"),
+    year = as.numeric(year)
+  )
+
+forst1920$data_id <- "forst1920"
+forst1920 <- clean_names(forst1920)
+
+
+# SIGNAL 18-23 : Dornburg1823 and Signal1823 are the same.------------------------------------------------------------
+
+
+# Checked also the dornburg1823csv files, it is the same dataset. 
+
+# signal1823 <- read_csv("data/BONARES_SIGNAL1823/signal.ID_7088_CROP_YIELD.csv")
+# names(signal1823)
+# 
+# signal1823$site <- as.factor(signal1823$site)
+# levels(signal1823$site)
+
 
 # For all rename lat and long ---------------------------------------------
 
-str(koch25) # already lat and long
+names(koch25) # already lat and long
 
-str(wendhausen)
+(nameswendhausen <- names(wendhausen))
 wendhausen <- rename(wendhausen, lat = latitude, long = longitude)
 
-str(gladbacherhof)
-gladbacherhof <- rename(gladbacherhof, long = lon)
+(nameshessen <- names(hessen))
+hessen <- rename(hessen, lat = lat, long = lon)
 
-str(bremsberg)
-bremsberg <- rename(bremsberg, long = lon)
 
-str(mariensee)
+(namesmariensee <- names(mariensee))
 mariensee <- rename(mariensee, lat = latitude, long = longitude)
 
-str(dornburg)
+(namesdornburg16 <- names(dornburg16))
 
-str(reiffenhausen)
+(namesdornburg1823 <- names(dornburg1823))
+
+(namessignal16 <- names(signal16))
+
+(namesforst1920 <- names(forst1920))
+forst1920 <- rename(forst1920, lat = y, long = x)
 
 # Plot all fields ---------------------------------------------------------
 
 coords <- bind_rows(
-  koch25       %>%  select(dataID, lat, long) %>% slice(1),
-  wendhausen  %>% select(dataID, lat, long) %>% slice(1),
-  gladbacherhof %>% select(dataID, lat, long) %>%slice(1),
-  bremsberg   %>% select(dataID, lat, long) %>% slice(1),
-  mariensee   %>% select(dataID, lat, long) %>% slice(1),
-  dornburg    %>% select(dataID, lat, long) %>% slice(1),
-  reiffenhausen %>% select(dataID, lat, long) %>% slice(1)
+  koch25       %>%  select(data_id, lat, long) %>% slice(1),
+  wendhausen  %>% select(data_id, lat, long) %>% slice(1),
+  gladbacherhof %>% select(data_id, lat, long) %>%slice(1),
+  bremsberg   %>% select(data_id, lat, long) %>% slice(1),
+  mariensee   %>% select(data_id, lat, long) %>% slice(1),
+  dornburg    %>% select(data_id, lat, long) %>% slice(1),
+  reiffenhausen %>% select(data_id, lat, long) %>% slice(1)
 ) %>% distinct()
 
 coords
@@ -234,7 +306,7 @@ ggplot() +
   geom_sf(data = coords_sf, size = 3) +
   geom_sf_text(
     data = coords_sf,
-    aes(label = dataID),
+    aes(label = data_id),
     nudge_x = 0.15,  # adjust position horizontally
     nudge_y = 0.2,  # adjust position vertically
     size = 3
@@ -273,14 +345,6 @@ str(gladbacherhof)
 # design: row, transect, direction, 
 # distance ( is distance to tree) 
 
-# Bind Rows ---------------------------------------------------------------
-
-allfields <- bind_rows(
-  koch25,  wendhausen, gladbacherhof, bremsberg,
-  mariensee, dornburg, reiffenhausen) 
-
-
-
 # details Koch 25 ----------------------------------------------------------
 
 design_koch25 <- koch25 %>% 
@@ -318,6 +382,110 @@ ggplot(design_koch25,
   facet_wrap(~year) +
   coord_equal() +
   theme_bw()
+
+
+
+
+# Bind Rows ---------------------------------------------------------------
+
+
+str(koch25)
+koch25$id <- as.factor(koch25$id)
+
+str(wendhausen)
+
+str(hessen)
+
+str(mariensee)
+
+str(dornburg16)
+
+str(dornburg1823)
+dornburg1823$id <- as.factor(dornburg1823$id)
+
+str(reiffenhausen16)
+str(signal16)
+signal16$id <- as.factor(signal16$id)
+
+str(forst1920)
+forst1920$id <- as.factor(forst1920$id)
+
+df <- bind_rows(
+  koch25,  wendhausen, hessen, mariensee, dornburg16, 
+  dornburg1823, reiffenhausen16, signal16, forst1920) 
+
+
+
+# Exploration of the new df dataset and reorganization of it --------------
+
+names(df[order(names(df))])
+
+
+# Year Merge  -------------------------------------------------------------
+
+year_cols <- c(
+"year",
+"date",
+"harvest_year"
+)
+
+
+df |>
+  select(any_of(year_cols)) |>
+  mutate(
+    across(everything(), ~!is.na(.x)),
+    .keep = "all"
+  ) |>
+  # Count unique presence patterns
+  count(across(everything()), name = "n_rows") |>
+  arrange(desc(n_rows))
+
+
+# Which data points contain the date column -----------------------------------------------
+datdf <- 
+df %>% 
+  filter(!is.na(date))
+# its Hessen and Forst
+
+df$year[is.na(df$year)] <- df$harvest_year[is.na(df$year)]
+
+# Distance To Tree Merge --------------------
+
+dist_cols <- c(
+"dist",
+"distance",
+"p_dist",
+"distance_from_tree_row",
+"distance_to_tree_strip"
+)
+
+
+# For each row, show which of these columns has a non-NA value
+df |>
+  select(any_of(dist_cols)) |>
+  mutate(
+    across(everything(), ~!is.na(.x)),
+    .keep = "all"
+  ) |>
+  # Count unique presence patterns
+  count(across(everything()), name = "n_rows") |>
+  arrange(desc(n_rows))
+
+# ----> there are 1096 NA for distance to tree
+
+## Merge the columns 
+
+df <- df |>
+  mutate(distance_to_tree = coalesce(as.character(dist), as.character(distance), as.character(p_dist), 
+                                     as.character(distance_from_tree_row), as.character(distance_to_tree_strip))) |>
+  select(-dist, -distance, -p_dist, -distance_from_tree_row, -distance_to_tree_strip)
+
+# Quick check
+sum(is.na(df$distance_to_tree)) # 1096 NA for distance to tree
+
+write.csv(df, "data/AnalysisData/20260618_df.csv", row.names = FALSE)
+
+
 
 
 
