@@ -1,0 +1,392 @@
+---
+title: "Data Exploration Protocol"
+subtitle: "Following Zuur, Ieno & Elphick (2010) — *Methods in Ecology and Evolution* 1: 3–14"
+author: ""
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: false
+    number_sections: true
+    df_print: paged
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo      = TRUE,
+  message   = FALSE,
+  warning   = FALSE,
+  fig.width = 8,
+  fig.height = 5,
+  dpi       = 150
+)
+```
+
+```{r libraries}
+library(tidyverse)   # wrangling + ggplot2
+library(lattice)     # dotplots / coplots (Zuur's classic tool)
+library(car)         # vif(), leveneTest(), scatterplotMatrix()
+library(lme4)        # variance components (Step 8)
+library(patchwork)   # combine ggplots side-by-side
+```
+
+```{r load-data}
+# --- Load and type your data here -------------------------------------------
+df <- readr::read_delim("../data/Koch25/yields_wintercrops.csv", delim = ";", locale = locale(decimal_mark = ","))
+df <- janitor::clean_names(df)
+#
+df <- df |>
+  mutate(
+    block  = factor(block),
+    id     = factor(id),
+    year   = factor(year),
+    p_dist = factor(p_dist)
+  )
+```
+
+---
+
+# Step 1 — Outliers in Y and X {.tabset}
+
+> **Zuur p. 4:** Cleveland dotplots are preferred over boxplots for detecting
+> outliers because they preserve observation order and reveal data-entry errors.
+
+## Dotplot — `yield_wweight`
+
+```{r step1-dotplot}
+dotchart(
+  df$yield_wweight,
+  main  = "Cleveland dotplot — yield_wweight",
+  xlab  = "yield_wweight",
+  ylab  = "Observation order",
+  pch   = 19,
+  color = "steelblue"
+)
+```
+
+## Boxplots by group
+
+```{r step1-boxplots}
+# p1 <- ggplot(df, aes(x = p_dist, y = yield_wweight)) +
+#   geom_boxplot(fill = "steelblue", alpha = 0.7, outlier.colour = "red") +
+#   labs(title = "yield_wweight by p_dist", x = "p_dist", y = "yield_wweight") +
+#   theme_bw()
+
+p2 <- ggplot(df, aes(x = factor(year), y = yield_wweight)) +
+  geom_boxplot(fill = "darkorange", alpha = 0.7, outlier.colour = "red") +
+  labs(title = "yield_wweight by year", x = "year", y = NULL) +
+  theme_bw()
+
+# p1 + p2
+```
+
+---
+
+# Step 2 — Homogeneity of Variance {.tabset}
+
+> **Zuur p. 6:** Heterogeneity of variance among groups violates OLS assumptions
+> and is often missed without conditional plots. Levene's test provides a formal check.
+
+## Plots
+
+```{r step2-plots}
+# p3 <- ggplot(df, aes(x = p_dist, y = yield_wweight, fill = p_dist)) +
+#   geom_boxplot(alpha = 0.7, show.legend = FALSE) +
+#   labs(title = "Variance by p_dist", x = "p_dist", y = "yield_wweight") +
+#   theme_bw()
+
+p4 <- ggplot(df, aes(x = factor(year), y = yield_wweight, fill = factor(year))) +
+  geom_boxplot(alpha = 0.7, show.legend = FALSE) +
+  labs(title = "Variance by year", x = "year", y = NULL) +
+  theme_bw()
+
+p5 <- ggplot(df, aes(x = factor(block), y = yield_wweight, fill = factor(block))) +
+  geom_boxplot(alpha = 0.7, show.legend = FALSE) +
+  labs(title = "Variance by block", x = "block", y = "yield_wweight") +
+  theme_bw()
+
+p4 + p5
+```
+
+## Levene's Test
+
+```{r step2-levene}
+# H0: variances are equal across groups
+# leveneTest(yield_wweight ~ p_dist,        data = df)
+leveneTest(yield_wweight ~ factor(year),  data = df)
+```
+
+---
+
+# Step 3 — Normality of Y {.tabset}
+
+> **Zuur p. 7:** Normality of the raw response and *within each group* matters.
+> Histograms and QQ-plots are more informative than Shapiro–Wilk alone, which
+> is overly sensitive at large *n*.
+
+## Overall
+
+```{r step3-overall, fig.width=9}
+par(mfrow = c(1, 2))
+
+hist(df$yield_wweight,
+     breaks = 20,
+     col    = "steelblue",
+     border = "white",
+     main   = "Histogram — yield_wweight",
+     xlab   = "yield_wweight")
+
+qqnorm(df$yield_wweight, main = "Normal QQ-plot — yield_wweight", pch = 19, col = "steelblue")
+qqline(df$yield_wweight, col = "red", lwd = 2)
+
+par(mfrow = c(1, 1))
+
+shapiro.test(df$yield_wweight)
+```
+
+## By p_dist
+
+```{r step3-pdist}
+# Conditional histograms — the lattice way (Zuur Fig. 3)
+histogram(~ yield_wweight | p_dist,
+          data   = df,
+          xlab   = "yield_wweight",
+          main   = "yield_wweight distribution within each p_dist",
+          layout = c(NA, 1),
+          col    = "steelblue")
+```
+
+## By year
+
+```{r step3-year}
+histogram(~ yield_wweight | factor(year),
+          data = df,
+          xlab = "yield_wweight",
+          main = "yield_wweight distribution within each year",
+          col  = "darkorange")
+```
+
+## Shapiro–Wilk per group
+
+```{r step3-shapiro}
+df |>
+  group_by(p_dist) |>
+  summarise(
+    n       = n(),
+    W       = shapiro.test(yield_wweight)$statistic,
+    p_value = shapiro.test(yield_wweight)$p.value
+  )
+```
+
+---
+
+# Step 4 — Zero Inflation {.tabset}
+
+> **Zuur p. 8:** Excess zeros can invalidate Gaussian models and may indicate
+> that a zero-inflated or Tweedie model is more appropriate.
+
+## Summary
+
+```{r step4-summary}
+zero_pct <- mean(df$yield_wweight == 0) * 100
+cat(sprintf("Zeros in yield_wweight: %.1f%% of %d observations\n",
+            zero_pct, nrow(df)))
+
+# Zeros by p_dist and year
+df |>
+  group_by(p_dist, year) |>
+  summarise(
+    n         = n(),
+    n_zeros   = sum(yield_wweight == 0),
+    zero_pct  = round(mean(yield_wweight == 0) * 100, 1),
+    .groups   = "drop"
+  )
+```
+
+## Plot
+
+```{r step4-plot}
+df |>
+  mutate(is_zero = yield_wweight == 0) |>
+  group_by(block, year) |>
+  summarise(zero_pct = mean(is_zero) * 100, .groups = "drop") |>
+  ggplot(aes(x = factor(year), y = zero_pct, fill = factor(block))) +
+  geom_col(position = "dodge") +
+  labs(title  = "Zero proportion by block × year",
+       x      = "year",
+       y      = "% zeros",
+       fill   = "block") +
+  theme_bw()
+```
+
+---
+
+# Step 5 — Collinearity Among Covariates {.tabset}
+
+> **Zuur p. 9:** Collinear predictors inflate standard errors and destabilise
+> coefficient estimates. VIF > 3 warrants caution; VIF > 10 is serious.
+> **Replace `covariate1`, `covariate2`, `covariate3` with your actual predictors.**
+
+## Correlation matrix
+
+```{r step5-cor}
+covars <- df |> select(covariate1, covariate2, covariate3)  # ← adjust
+cor(covars, use = "pairwise.complete.obs") |> round(2)
+```
+
+## Scatterplot matrix
+
+```{r step5-scattermatrix, fig.height=6}
+scatterplotMatrix(
+  ~ covariate1 + covariate2 + covariate3,  # ← adjust
+  data   = df,
+  smooth = list(method = "loessLine"),
+  main   = "Step 5 — Scatterplot matrix of covariates"
+)
+```
+
+## VIF
+
+```{r step5-vif}
+m_vif <- lm(yield_wweight ~ covariate1 + covariate2 + covariate3, data = df)
+vif(m_vif)
+```
+
+---
+
+# Step 6 — Y–X Relationships {.tabset}
+
+> **Zuur p. 10:** Scatterplots of Y against each covariate, conditioned on
+> grouping factors, reveal non-linearity and guide link-function choice.
+
+## By p_dist
+
+```{r step6-pdist}
+ggplot(df, aes(x = covariate1, y = yield_wweight, colour = p_dist)) +
+  geom_point(alpha = 0.4, size = 1.5) +
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_wrap(~ p_dist) +
+  labs(title = "yield_wweight ~ covariate1 | p_dist") +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+## By year
+
+```{r step6-year}
+ggplot(df, aes(x = covariate1, y = yield_wweight, colour = factor(year))) +
+  geom_point(alpha = 0.4, size = 1.5) +
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_wrap(~ year) +
+  labs(title = "yield_wweight ~ covariate1 | year", colour = "year") +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+## Coplot (Zuur style)
+
+```{r step6-coplot}
+coplot(yield_wweight ~ covariate1 | p_dist,
+       data  = df,
+       panel = function(x, y, ...) {
+         points(x, y, pch = 19, col = "steelblue", cex = 0.7, ...)
+         abline(lm(y ~ x), col = "red", lwd = 2)
+       })
+```
+
+---
+
+# Step 7 — Interactions {.tabset}
+
+> **Zuur p. 11:** Non-parallel regression lines across groups indicate that
+> an interaction term should be considered in the model.
+
+## covariate1 × p_dist
+
+```{r step7-pdist}
+ggplot(df, aes(x = covariate1, y = yield_wweight,
+               colour = p_dist, fill = p_dist, group = p_dist)) +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  labs(title  = "Interaction check: yield_wweight ~ covariate1 × p_dist",
+       colour = "p_dist", fill = "p_dist") +
+  theme_bw()
+```
+
+## covariate1 × year
+
+```{r step7-year}
+ggplot(df, aes(x = covariate1, y = yield_wweight,
+               colour = factor(year), fill = factor(year), group = factor(year))) +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  labs(title  = "Interaction check: yield_wweight ~ covariate1 × year",
+       colour = "year", fill = "year") +
+  theme_bw()
+```
+
+---
+
+# Step 8 — Independence of Observations {.tabset}
+
+> **Zuur p. 12:** Nested sampling (block > id) and repeated measures across
+> years both induce non-independence. ACF on naive residuals reveals temporal
+> autocorrelation; residual plots by group reveal spatial clustering.
+
+## ACF — temporal autocorrelation
+
+```{r step8-acf}
+m_naive <- lm(yield_wweight ~ covariate1 + p_dist, data = df)
+
+acf(resid(m_naive),
+    main = "ACF of naive residuals — temporal autocorrelation",
+    col  = "steelblue",
+    lwd  = 2)
+```
+
+## Residuals by group
+
+```{r step8-residuals}
+df_resid <- df |> mutate(.resid = resid(m_naive))
+
+p_block <- ggplot(df_resid, aes(x = factor(block), y = .resid)) +
+  geom_boxplot(fill = "plum", alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "red") +
+  labs(title = "Residuals by block", x = "block", y = "residual") +
+  theme_bw()
+
+p_pdist <- ggplot(df_resid, aes(x = p_dist, y = .resid)) +
+  geom_boxplot(fill = "skyblue", alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "red") +
+  labs(title = "Residuals by p_dist", x = "p_dist", y = NULL) +
+  theme_bw()
+
+p_block + p_pdist
+```
+
+## Variance components (LMM)
+
+```{r step8-lmm}
+# block/id = nested random intercepts; year = repeated-measures grouping
+m_lmm <- lmer(
+  yield_wweight ~ p_dist + (1 | block/id) + (1 | year),
+  data = df,
+  REML = TRUE
+)
+
+summary(m_lmm)
+
+# Proportion of total variance explained by each random effect
+as.data.frame(VarCorr(m_lmm)) |>
+  select(grp, vcov) |>
+  mutate(pct_var = round(vcov / sum(vcov) * 100, 1)) |>
+  arrange(desc(pct_var))
+```
+
+---
+
+*Reference: Zuur AF, Ieno EN, Elphick CS (2010) A protocol for data exploration
+to avoid common statistical problems. Methods in Ecology and Evolution 1: 3–14.
+<https://doi.org/10.1111/j.2041-210X.2009.00001.x>*

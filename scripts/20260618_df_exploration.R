@@ -149,9 +149,9 @@ df |>
 
 # 3. How many plots per site, blocks per site?
 df |> dplyr::summarise(
-  n_plots  = dplyr::n_distinct(plot),
+  n_plots  = dplyr::n_distinct(id),
   n_blocks = dplyr::n_distinct(block),
-  .by = data_id
+  .by = year
 )
 
 # 4. Are db_site_id / db_site_name / site all synonyms for the same thing?

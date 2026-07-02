@@ -91,11 +91,19 @@ lapply(factors, sumobs)
 
 
 # Step 1: Are there outliers in Y and X?  ---------------------------------
-plot(X)
-ggplot(df, aes(x = Crop, y = Yield_wweight, color = Crop)) +
-  geom_boxplot() +
-  theme_bw()
 
+num <- sapply(df, is.numeric)
+
+Q1 <- apply(df[, num], 2, quantile, 0.25, na.rm = TRUE)
+Q3 <- apply(df[, num], 2, quantile, 0.75, na.rm = TRUE)
+IQR <- Q3 - Q1
+
+outliers <- sweep(df[, num], 2, Q1 - 1.5 * IQR, `<`) |
+  sweep(df[, num], 2, Q3 + 1.5 * IQR, `>`)
+
+colSums(outliers)
+df[rowSums(outliers) > 0, ]
+   
 # Step 3: Are the data normally distributed? ------------------------------
 hist(df$Yield_wweight)
 hist(df$Year)
@@ -104,6 +112,10 @@ levels(df$Treatment)
 levels(df$Aspect)
 levels(df$Crop)
 
+plot(X)
+ggplot(df, aes(x = Crop, y = Yield_wweight, color = Crop)) +
+  geom_boxplot() +
+  theme_bw()
 
 # Step 4: Are there lots of zeros in the data? ----------------------------
 
