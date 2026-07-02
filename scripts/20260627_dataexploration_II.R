@@ -131,6 +131,38 @@ nrow(koch25) # 28174
 write.csv(koch25, file = "data/AnalysisData/20260629_ihingerhof.csv", row.names = FALSE)
 
 # =============================================================================
+# Data structure: SIGNAL 16
+#   field: Wendhausen, Dornburg, Mariensee, Forst 
+#   ACS Design  — plot (r1:r4) 20 forestry and 4 control sites 
+#   year        — 2016, 2017
+#   distance to tree row     — "distance_to_tree_strip"
+#   yield — "grain_corn_or_grass_dry_mass_16" 
+#            "ww_crude_protein"       "decomposition"          "litter_dm"              "wood_yield_estimated"
+#   coordinates - lat and lon
+# =============================================================================
+
+signal16 <- read_csv("data/BONARES_SIGNAL16/signal.ID_7048_BIOMASSES_SIGNAL_PROJECT_V1_APR_08_2020.csv")
+
+signal16$data_id <- "signal16"
+signal16 <- janitor::clean_names(signal16)
+names(signal16)
+
+
+wendhausen_1920 <- wendhausen_1920[, -(10:15)]
+wendhausen_1920$crop = "silage maize"
+names(wendhausen_1920)[names(wendhausen_1920) == "grain_corn_or_grass_dry_mass_16"] <- "yield"
+names(wendhausen_1920)[names(wendhausen_1920) == "straw_or_grass_dry_mass_2016"] <- "yield_straw"
+
+# some rows have na in yield, because there only wood was harvested -> remove
+wendhausen_1920 <- wendhausen_1920[!(is.na(wendhausen_1920$yield) & is.na(wendhausen_1920$distance_to_tree_strip)), ]
+
+# check:
+colSums(is.na(wendhausen_1920)) # 8 in distance those are controls
+nrow(wendhausen_1920) # 48
+
+
+
+# =============================================================================
 # Data structure: Wendhausen
 #   field: Wendhausen
 #   ACS Design  — plot (r1:r4) 20 forestry and 4 control sites 
@@ -141,77 +173,83 @@ write.csv(koch25, file = "data/AnalysisData/20260629_ihingerhof.csv", row.names 
 #   coordinates - lat and lon
 # =============================================================================
 
-
-# Wendhausen 15 18 --------------------------------------------------------
-
-
-wendhausen_1518 <- read_csv("data/BONARES_Cropland agroforestry 2015-2018/SIGNAL.ID_7013_DATEN_WH_15_18.csv")
-wendhausen_1518$data_id <- "wendhausen1518"
-
-# NAMES
-(names(wendhausen_1518) <- names(wendhausen_1518))
-wendhausen_1518 <- janitor::clean_names(wendhausen_1518)
-(names(wendhausen_1518) <- names(wendhausen_1518))
-
-# NA check:
-nacheck <- wendhausen_1518 %>%
-  filter(is.na(or_dm) & is.na(ww_dm)) %>% 
-  filter(year != 2015) %>% 
-  select(year, plot, distance_to_tree_strip)
-
-# Decision: filter out the observations, that have NA in distance to tree, and are NAs in yield 
-nrow(wendhausen_1518) # 84 
-wendhausen_1518 <- wendhausen_1518 %>%
-  filter(year != 2015) %>%
-  filter(!(is.na(or_dm) & is.na(ww_dm) & is.na(distance_to_tree_strip)))
-nrow(wendhausen_1518) # 48
-colSums(is.na(wendhausen_1518)) # 8 observations na in distance - those are controls 
-
-# Assign CROP 
-wendhausen_1518 <- wendhausen_1518 %>%
-  mutate(
-    crop = case_when(
-      year == 2016 ~ "oil rape",
-      year == 2017 ~ "winter wheat",
-      TRUE ~ NA_character_
-    ),
-    yield = coalesce(or_dm, ww_dm)
-  ) %>%
-  select(-or_dm, -ww_dm) %>% 
-  select(lat:soil_type, plot:yield)
-
-# check:
-colSums(is.na(wendhausen_1518)) # 8 in distance 
-nrow(wendhausen_1518) # 48 
-
-
-
-# Wendhausen 17 18 --------------------------------------------------------
-
-wendhausen_1718 <- read_csv("data/BONARES_Cropland Agroforestry 2017 and 2018/signal.ID_7042_BIOMASSE_17_18_WH_280319.csv")
-wendhausen_1718$data_id <- "wendhausen1718"
-(names(wendhausen_1718) <- names(wendhausen_1718))
-
-wendhausen_1718 <- janitor::clean_names(wendhausen_1718)
-
-wendhausen_1718 <- wendhausen_1718[, -c(1, 11:15)]
-wendhausen_1718$crop = "straw"
-names(wendhausen_1718)[names(wendhausen_1718) == "straw_dm"] <- "yield"
-names(wendhausen_1718)[names(wendhausen_1718) == "longitude"] <- "lon"
-names(wendhausen_1718)[names(wendhausen_1718) == "latitude"] <- "lat"
-
-# some rows have na in yield, because there only wood was harvested -> remove
-wendhausen_1718 <- wendhausen_1718[!(is.na(wendhausen_1718$yield) & is.na(wendhausen_1718$distance_to_tree_strip)), ]
-
-# check:
-colSums(is.na(wendhausen_1718)) # 8 in distance those are controls
-nrow(wendhausen_1718) # 48 
-
-wendhausen_x1 <- bind_rows(wendhausen_1518,wendhausen_1718)
-
-# check:
-colSums(is.na(wendhausen_x1)) # 16 in distance those are controls
-nrow(wendhausen_x1) # 96
+# 
+# # Wendhausen 15 18 --------------------------------------------------------
+# 
+# 
+# wendhausen_1518 <- read_csv("data/BONARES_Cropland agroforestry 2015-2018/SIGNAL.ID_7013_DATEN_WH_15_18.csv")
+# wendhausen_1518$data_id <- "wendhausen1518"
+# 
+# # NAMES
+# (names(wendhausen_1518) <- names(wendhausen_1518))
+# wendhausen_1518 <- janitor::clean_names(wendhausen_1518)
+# (names(wendhausen_1518) <- names(wendhausen_1518))
+# 
+# # NA check:
+# nacheck <- wendhausen_1518 %>%
+#   filter(is.na(or_dm) & is.na(ww_dm)) %>% 
+#   filter(year != 2015) %>% 
+#   select(year, plot, distance_to_tree_strip)
+# 
+# # Decision: filter out the observations, that have NA in distance to tree, and are NAs in yield 
+# nrow(wendhausen_1518) # 84 
+# wendhausen_1518 <- wendhausen_1518 %>%
+#   filter(year != 2015) %>%
+#   filter(!(is.na(or_dm) & is.na(ww_dm) & is.na(distance_to_tree_strip)))
+# 
+# # check
+# nrow(wendhausen_1518) # 48
+# colSums(is.na(wendhausen_1518)) # 8 observations na in distance - those are controls 
+# 
+# wendhausen_1518 <- wendhausen_1518[wendhausen_1518$year == 2016, ]
+# 
+# # Assign CROP 
+# wendhausen_1518 <- wendhausen_1518 %>%
+#   mutate(
+#     crop = case_when(
+#       year == 2016 ~ "oil rape",
+#       year == 2017 ~ "winter wheat",
+#       TRUE ~ NA_character_
+#     ),
+#     yield = coalesce(or_dm, ww_dm)
+#   ) %>%
+#   select(-or_dm, -ww_dm) %>% 
+#   select(lat:soil_type, plot:yield)
+# 
+# 
+# # check:
+# colSums(is.na(wendhausen_1518)) # 8 in distance 
+# nrow(wendhausen_1518) # 48 
+# 
+# 
+# 
+# # Wendhausen 17 18 --------------------------------------------------------
+# 
+# wendhausen_1718 <- read_csv("data/BONARES_Cropland Agroforestry 2017 and 2018/signal.ID_7042_BIOMASSE_17_18_WH_280319.csv")
+# wendhausen_1718$data_id <- "wendhausen1718"
+# (names(wendhausen_1718) <- names(wendhausen_1718))
+# 
+# wendhausen_1718 <- janitor::clean_names(wendhausen_1718)
+# 
+# wendhausen_1718 <- wendhausen_1718[, -c(1, 12:15)]
+# wendhausen_1718$crop = "winter wheat"
+# names(wendhausen_1718)[names(wendhausen_1718) == "wheat_dm"] <- "yield"
+# names(wendhausen_1718)[names(wendhausen_1718) == "straw_dm"] <- "yield_straw"
+# names(wendhausen_1718)[names(wendhausen_1718) == "longitude"] <- "lon"
+# names(wendhausen_1718)[names(wendhausen_1718) == "latitude"] <- "lat"
+# 
+# # some rows have na in yield, because there only wood was harvested -> remove
+# wendhausen_1718 <- wendhausen_1718[!(is.na(wendhausen_1718$yield_straw) & is.na(wendhausen_1718$distance_to_tree_strip)), ]
+# 
+# # check:
+# colSums(is.na(wendhausen_1718)) # 8 in distance those are controls
+# nrow(wendhausen_1718) # 48 
+# 
+# wendhausen_x1 <- bind_rows(wendhausen_1518,wendhausen_1718)
+# 
+# # check:
+# colSums(is.na(wendhausen_x1)) # 16 in distance those are controls
+# nrow(wendhausen_x1) # 96
 
 # Wendhausen 19 20 --------------------------------------------------------
 
@@ -246,36 +284,25 @@ wendhausen_21$data_id <- "wendhausen21"
 wendhausen_21 <- janitor::clean_names(wendhausen_21)
 names(wendhausen_21)
 
+names(wendhausen_21)[names(wendhausen_21) == "sb_dm_straw"] <- "yield_straw"
+names(wendhausen_21)[names(wendhausen_21) == "sb_dm"] <- "yield"
+wendhausen_21$crop <- "summer barley"
 
-wendhausen_21 <- wendhausen_21 %>%
-  pivot_longer(
-    cols = c(sb_dm_straw, sb_dm),
-    names_to = "crop",
-    values_to = "yield"
-  ) %>%
-  mutate(
-    crop = case_when(
-      crop == "sb_dm_straw" ~ "straw",
-      crop == "sb_dm" ~ "summer barley"
-    )
-  )
-
-
-wendhausen_21 <- wendhausen_21[, -(9:13)]
+names(wendhausen_21)
+wendhausen_21 <- wendhausen_21[, -(11:15)]
 
 # some rows have na in yield, because there only wood was harvested -> remove
 wendhausen_21 <- wendhausen_21[!(is.na(wendhausen_21$yield) & is.na(wendhausen_21$distance_to_tree_strip)), ]
 
-
 # check:
-colSums(is.na(wendhausen_21)) # 8 in distance those are controls
-nrow(wendhausen_21) # 48
+colSums(is.na(wendhausen_21)) # 4 in distance those are controls
+nrow(wendhausen_21) # 24
 
 wendhausen_x3 <- bind_rows(wendhausen_x2,wendhausen_21)
 
 # check:
-colSums(is.na(wendhausen_x3)) # 8 in distance those are controls
-nrow(wendhausen_x3) # 48
+colSums(is.na(wendhausen_x3)) #
+nrow(wendhausen_x3) # 168
 
 
 # Wendhausen 22 --------------------------------------------------------
@@ -300,7 +327,7 @@ wendhausen_x4 <- bind_rows(wendhausen_x3,wendhausen_22)
 
 # check:
 colSums(is.na(wendhausen_x4)) # 36 
-nrow(wendhausen_x4) # 216
+nrow(wendhausen_x4) # 192
 
 # Wendhausen 23 --------------------------------------------------------
 
@@ -324,8 +351,8 @@ nrow(wendhausen_23) # 24, since only one year
 wendhausen_x5 <- bind_rows(wendhausen_x4,wendhausen_23)
 
 # check:
-colSums(is.na(wendhausen_x5)) # 40
-nrow(wendhausen_x5) # 240
+colSums(is.na(wendhausen_x5)) # 36
+nrow(wendhausen_x5) # 216
 
 
 # Wendhausen 2016-2023 ----------------------------------------------------
@@ -396,87 +423,87 @@ mariensee1719[mariensee1719$year == 2018, ] # 36
 names(mariensee1719)
 
 # Mariensee 15 17 --------------------------------------------------------
-
-mariensee1517 <- read_csv("data/Mariensee1517/signal.ID_7008_Gras_Laub_Holz_MS_2015_2016_2017.csv")
-mariensee1517$data_id <- "mariensee1517"
-
-mariensee1517 <- janitor::clean_names(mariensee1517)
-names(mariensee1517)
-
-mariensee1517 <- mariensee1517[, c(3:10, 20)]
-mariensee1517$crop = "grass"
-names(mariensee1517)[names(mariensee1517) == "grass_dm"] <- "yield"
-
-
-names(mariensee1517)[names(mariensee1517) == "distance_to_tree_strip"] <- "distance_to_tree_row"
-names(mariensee1517)[names(mariensee1517) == "longitude"] <- "long"
-names(mariensee1517)[names(mariensee1517) == "latitude"] <- "lat"
-mariensee1517$tree_species <- "willow"
-mariensee1517$yield_unit <- "t/ha"
-names(mariensee1517)
-
-# check:
-colSums(is.na(mariensee1517)) # 12/24/48 - different
-nrow(mariensee1517) # 108
-
-
-# some rows have na in yield, because there only wood was harvested -> remove
-mariensee1517 <- mariensee1517[!(is.na(mariensee1517$yield) & is.na(mariensee1517$distance_to_tree_row)), ]
-
-# check:
-colSums(is.na(mariensee1517)) # 12: 1 year with 6 controls , but still 36 yields empty
-nrow(mariensee1517) # 96
-
-# After investigating the dataset decided to only use year 2016 since
-# 2017 is present in the orevious dataset, and 2015 has only wood yield 
-
-# filter:
-mariensee1517 <- mariensee1517[mariensee1517$date == as.Date("2016-01-01"), ]# 36
-
-# rename plots and create year column
-  plot_map <- c(
-    "1" = "M-AF-r1",
-    "2" = "M-AF-r2",
-    "3" = "M-AF-r3",
-    "4" = "M-AF-r4",
-    "5" = "M-AF-r5",
-    "6" = "M-AF-r6",
-    "R1" = "M-C-r1",
-    "R2" = "M-C-r2",
-    "R3" = "M-C-r3",
-    "R4" = "M-C-r4",
-    "R5" = "M-C-r5",
-    "R6" = "M-C-r6"
-  )
-
-mariensee1517 <- mariensee1517 %>%
-  mutate(
-    plot = plot_map[plot],
-    year = as.integer(format(date, "%Y"))
-  ) %>%
-  select(-date) %>%
-  rename(long = lon)
-
-# bind rows 
-mariensee <- bind_rows(mariensee1517,mariensee1719)
-
-# check:
-colSums(is.na(mariensee)) # 12/18 - different
-nrow(mariensee) # 108
-
-mariensee$distance_to_tree_row[grepl("C", mariensee$plot)] <- NA
-
-# check:
-colSums(is.na(mariensee)) # 18: 3 years 3 controls 6 plots -> 18 NA
-nrow(mariensee) # 108: 36 plots per year 3 years 
-
-# check 
-table(mariensee$year) # 36 per year
-
-# field assignment
-mariensee$field <- "Mariensee"
-
-write.csv(mariensee, file = "data/AnalysisData/20260630_mariensee.csv", row.names = FALSE)
+# 
+# mariensee1517 <- read_csv("data/Mariensee1517/signal.ID_7008_Gras_Laub_Holz_MS_2015_2016_2017.csv")
+# mariensee1517$data_id <- "mariensee1517"
+# 
+# mariensee1517 <- janitor::clean_names(mariensee1517)
+# names(mariensee1517)
+# 
+# mariensee1517 <- mariensee1517[, c(3:10, 20)]
+# mariensee1517$crop = "grass"
+# names(mariensee1517)[names(mariensee1517) == "grass_dm"] <- "yield"
+# 
+# 
+# names(mariensee1517)[names(mariensee1517) == "distance_to_tree_strip"] <- "distance_to_tree_row"
+# names(mariensee1517)[names(mariensee1517) == "longitude"] <- "long"
+# names(mariensee1517)[names(mariensee1517) == "latitude"] <- "lat"
+# mariensee1517$tree_species <- "willow"
+# mariensee1517$yield_unit <- "t/ha"
+# names(mariensee1517)
+# 
+# # check:
+# colSums(is.na(mariensee1517)) # 12/24/48 - different
+# nrow(mariensee1517) # 108
+# 
+# 
+# # some rows have na in yield, because there only wood was harvested -> remove
+# mariensee1517 <- mariensee1517[!(is.na(mariensee1517$yield) & is.na(mariensee1517$distance_to_tree_row)), ]
+# 
+# # check:
+# colSums(is.na(mariensee1517)) # 12: 1 year with 6 controls , but still 36 yields empty
+# nrow(mariensee1517) # 96
+# 
+# # After investigating the dataset decided to only use year 2016 since
+# # 2017 is present in the orevious dataset, and 2015 has only wood yield 
+# 
+# # filter:
+# mariensee1517 <- mariensee1517[mariensee1517$date == as.Date("2016-01-01"), ]# 36
+# 
+# # rename plots and create year column
+#   plot_map <- c(
+#     "1" = "M-AF-r1",
+#     "2" = "M-AF-r2",
+#     "3" = "M-AF-r3",
+#     "4" = "M-AF-r4",
+#     "5" = "M-AF-r5",
+#     "6" = "M-AF-r6",
+#     "R1" = "M-C-r1",
+#     "R2" = "M-C-r2",
+#     "R3" = "M-C-r3",
+#     "R4" = "M-C-r4",
+#     "R5" = "M-C-r5",
+#     "R6" = "M-C-r6"
+#   )
+# 
+# mariensee1517 <- mariensee1517 %>%
+#   mutate(
+#     plot = plot_map[plot],
+#     year = as.integer(format(date, "%Y"))
+#   ) %>%
+#   select(-date) %>%
+#   rename(long = lon)
+# 
+# # bind rows 
+# mariensee <- bind_rows(mariensee1517,mariensee1719)
+# 
+# # check:
+# colSums(is.na(mariensee)) # 12/18 - different
+# nrow(mariensee) # 108
+# 
+# mariensee$distance_to_tree_row[grepl("C", mariensee$plot)] <- NA
+# 
+# # check:
+# colSums(is.na(mariensee)) # 18: 3 years 3 controls 6 plots -> 18 NA
+# nrow(mariensee) # 108: 36 plots per year 3 years 
+# 
+# # check 
+# table(mariensee$year) # 36 per year
+# 
+# # field assignment
+# mariensee$field <- "Mariensee"
+# 
+# write.csv(mariensee, file = "data/AnalysisData/20260630_mariensee.csv", row.names = FALSE)
 
 
 # =============================================================================
@@ -490,15 +517,10 @@ write.csv(mariensee, file = "data/AnalysisData/20260630_mariensee.csv", row.name
 # =============================================================================
 
 
-# Dornburg 16 ----------------------------------------------------------------
-# dornburg16 <- read_csv("data/Bonares_Dornburg16/signal.ID_7004_PROD_D_2016_V2.csv")
-# The dataset dornburg 16 was left behind, because its poorly documented and there is 
-# another version of this data online. 
-
-
 # Dornburg 18 23 ----------------------------------------------------------------
 
 dornburg1823 <- read_csv("data/BONARES_DornburgVechta1823/signal.ID_7088_CROP_YIELD.csv")
+dornburgvechta <- dornburg1823
 
 dornburg1823 <- janitor::clean_names(dornburg1823)
 names(dornburg1823)
@@ -511,7 +533,6 @@ dornburg1823 <- dornburg1823 %>%
 dornburg1823$data_id <- "dornburg1823"
 dornburg1823$tree_species <- "poplar"
 dornburg1823$yield_unit <- "g/m2"
-dornburg1823$field <- "Dornburg"
 
 levels(as.factor(dornburg1823$site))
 
@@ -539,7 +560,7 @@ names(dornburg1823)[names(dornburg1823) == "harvest_year"] <- "year"
 names(dornburg1823)[names(dornburg1823) == "grain_or_corn_dry_mass"] <- "yield"
 head(dornburg1823)
 
-dornburg1823 <- dornburg1823[, c(3:6, 8:14)]
+dornburg1823 <- dornburg1823[, c(1, 3:6, 8:14)]
 
 # check 
 table(dornburg1823$year) # 24 in 2018, 68 in 2019, 72 in 2020, 84 in 2021, 80 in 2022, 76 in 2023
@@ -549,13 +570,30 @@ dornburg1823 <- dornburg1823[dornburg1823$field == "Dornburg", ]
 # check:
 colSums(is.na(dornburg1823)) # 2 in yield, 128 in distance to tree row 
 nrow(dornburg1823) # 284
-
-# check 
 table(dornburg1823$year) #  24 2018,   48 2019,   48 2020,  56 2021 ,  56 2022,  52 2023
+
+# 2018: 4 distances, 4 plots, 4 controls
+#       also D_AFcrop_r1 -> exlude those 
+# 2019: same 24 but reduced and normal fertilization -> 48
+# 2020: same
+z <- dornburg1823[dornburg1823$year == 2021, ]
+# 2021: in the Dornburg normal additional 18 m distance "D_AF_r1_18m", 
+#       also D_AFcrop_r1 -> exlude those 
+
+dornburg1823 <- dornburg1823[!grepl("AFcrop", dornburg1823$id), ]
+
+# check
+table(dornburg1823$year) #  20 2018,   40 2019,   40 2020,  48 2021 ,  48 2022,  44 2023
+
+# 2023: sometimes 7 m is missing 
+
+# bind rows
+
+write.csv(dornburg1823, file = "data/AnalysisData/20260701_dornburg.csv", row.names = FALSE)
 
 # Vechta ------------------------------------------------------------------
 
-vechta <- dornburg1823[dornburg1823$field == "Vechta", ] # 120 
+vechta <- dornburgvechta[dornburgvechta$field == "Vechta", ] # 120 
 table(vechta$year) # 20 in 2019, 24 in 2020, 28 in 2021, 24 in 2022, 24 in 2023
 
 # AFcrop is weighted by the area coverage of the sampling distances in AF
@@ -578,12 +616,53 @@ nrow(vechta) # 100
 
 write.csv(vechta, file = "data/AnalysisData/20260701_vechta.csv", row.names = FALSE)
 
-
 # Forst 2019-2020 ---------------------------------------------------------
 forst1920 <- read_csv("data/BONARES_Forst1920/signal.ID_7060_CROP_YIELDS_FORST_2019_2020.csv")
 
-# SIGNAL 2016 -------------------------------------------------------------
-signal16 <- read_csv("data/BONARES_SIGNAL16/signal.ID_7048_BIOMASSES_SIGNAL_PROJECT_V1_APR_08_2020.csv")
+forst1920$data_id <- "forst1920"
+
+forst1920 <- janitor::clean_names(forst1920)
+names(forst1920)
+head(forst1920)
+
+forst1920 <- forst1920[, c(2:6, 14, 19:20)]
+
+# latitude longitude
+names(forst1920)[names(forst1920) == "x"] <- "long"
+names(forst1920)[names(forst1920) == "y"] <- "lat"
+
+# distance to tree row
+
+# crop and yield 
+names(forst1920)[names(forst1920) == "corn_dry_weight_t_per_ha"] <- "yield"
+names(forst1920)[names(forst1920) == "straw_dry_weight_t_per_ha"] <- "yield_straw"
+
+
+# date to year 
+forst1920 <- forst1920 %>%
+  mutate(
+    year = as.integer(format(date, "%Y"))
+  ) %>%
+  select(-date) 
+
+
+mariensee1517 <- mariensee1517[, c(3:10, 20)]
+mariensee1517$crop = "grass"
+names(mariensee1517)[names(mariensee1517) == "grass_dm"] <- "yield"
+
+
+names(mariensee1517)[names(mariensee1517) == "distance_to_tree_strip"] <- "distance_to_tree_row"
+names(mariensee1517)[names(mariensee1517) == "longitude"] <- "long"
+names(mariensee1517)[names(mariensee1517) == "latitude"] <- "lat"
+mariensee1517$tree_species <- "willow"
+mariensee1517$yield_unit <- "t/ha"
+names(mariensee1517)
+
+# check:
+colSums(is.na(mariensee1517)) # 12/24/48 - different
+nrow(mariensee1517) # 108
+
+
 
 # Reiffenhausen -----------------------------------------------------------
 reiffenhausen16 <- read_csv("data/BONARES_Reiffenhausen16/signal.ID_7039_REIFFENHAUSEN_BIOMASS_DATA_V2.csv")
@@ -591,3 +670,8 @@ reiffenhausen16 <- read_csv("data/BONARES_Reiffenhausen16/signal.ID_7039_REIFFEN
 # Gladbacherhof -----------------------------------------------------------
 gladbacherhof <- readxl::read_excel("data/ZALF_Hessen_2122/AFGH1_Yield_All.xlsx")
 
+
+# To Do After -------------------------------------------------------------
+
+# unite observations for Koch, because currently those are point measurements 
+# not sure about gladbacherhof if it is the same for them 
