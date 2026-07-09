@@ -1,0 +1,35 @@
+DATASET,ORIGINAL COLUMN NAME,ORIGINAL YIELD COLUMN DESCRIPTION,STANDARDIZED NAME,LINE
+SIGNAL16,harvest_year,x,year,25
+SIGNAL16,product_crop_grass_row_and_mono,x,crop,26
+SIGNAL16,straw_or_grass_dry_mass_2016,"Straw (for crops) or grass (for grassland) dry mass. Grams per square meter per year. Straw: plot combine sampling, then drying of sample; grass: hand sampling then drying of sample.",yield_straw,27
+SIGNAL16,grain_corn_or_grass_dry_mass_16,"Grain (for crops) or corn (shredded) dry mass. Grams per square meter per year. Grain: plot combine sampling, then drying of sample.",yield,28
+Wendhausen 1920,sm_dm,Dry matter yield silage maize,yield,101
+Wendhausen 2021,sb_dm_straw,Dry matter yield summer barley,yield_straw,147
+Wendhausen 2021,sb_dm,Dry matter yield summer barley,yield,148
+Wendhausen 2022,or_dm,Dry matter yield oilseed rape,yield,180
+Wendhausen 2023,sm_dm,Dry matter yield silage maize,yield,210
+Dornburg 1823,harvest_year,x,year,280
+Dornburg 1823,grain_or_corn_dry_mass,"Crops were harvested with a plot combine within an area of 17.5 m² (1.75 m × 10 m) at each sampling distance. For the calculation of dry matter, parts of the harvested crop were dried in an oven at 60 °C until a constant mass was reached.",yield,281
+Vechta,harvest_year,x,year,318
+Vechta,grain_or_corn_dry_mass,"Crops were harvested with a plot combine within an area of 17.5 m² (1.75 m × 10 m) at each sampling distance. For the calculation of dry matter, parts of the harvested crop were dried in an oven at 60 °C until a constant mass was reached.",yield,319
+Reiffenhausen,corn_2016_winter_barley,Mass of winter barley grain in 2016.,yield,377
+Reiffenhausen,straw_2016_winter_barley,Mass of winter barley straw in 2016.,yield_straw,378
+Reiffenhausen,corn_2017_rapeseed,Mass of rapeseed seeds in 2017.,yield,377
+Reiffenhausen,straw_2017_rapeseed,Mass of rapeseed straw in 2017.,yield_straw,378
+Reiffenhausen,signal_code,x,plot,379
+Mariensee 1719,grass_dm,Dry matter yield grass,yield,407
+Mariensee 1719,longitude,x,lon,408
+Mariensee 1719,latitude,x,lat,409
+Forst 1920,x,x,lon,451
+Forst 1920,y,x,lat,452
+Forst 1920,corn_dry_weight_t_per_ha,"The dry weight of corn in t/ha. Calculated as follows: corn_dry_weight_t_per_ha=((fresh_weight_corn_kg/(1+corn_moisture_content))/Harvested_area_m2)*10",yield,458
+Forst 1920,straw_dry_weight_t_per_ha,"The dry weight of straw in t/ha. Calculated as follows: straw_dry_weight_t_per_ha=((fresh_weight_straw_kg/(1+straw_moisture_content))/Harvested_area_m2)*10",yield_straw,459
+Forst 1920,crop_type,x,crop,460
+Gladbacherhof,grain_kg_m2,no metadata,yield,498
+Gladbacherhof,biomass_kg_m2,no metadata,yield_straw,499
+Gladbacherhof,total_kg_m2,no metadata,yield_total,500
+Gladbacherhof,distance,x,distance_to_tree_strip,501
+Gladbacherhof,db_site_name,x,plot,503
+Koch25,treatment,x,tree_species,525
+Koch25,p_dist,x,distance_to_tree_strip,527
+Koch25,yield_wweight,no metadata,yield,528

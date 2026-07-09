@@ -44,7 +44,7 @@ ggplot() +
   geom_sf(data = germany, fill = "grey95") +
   geom_point(data = study_locations, aes(x = lon, y = lat, color = field), size = 3) +
   theme_minimal() +
-  labs(title = "study locations", x = "longitude", y = "latitude")
+  labs(title = "", x = "Longitude", y = "Latitude", color = "Field")
 ```
 
 ## observations per year by study

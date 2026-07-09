@@ -1,0 +1,318 @@
+================================================================================
+DATA PROCESSING DECISIONS & COLUMN NAME STANDARDIZATION
+Agroforestry Yield Analysis - Complete Documentation
+================================================================================
+
+================================================================================
+SUMMARY STATEMENT
+================================================================================
+
+All datasets underwent standardized column name harmonization to enable 
+comparative analysis. Only columns including information on yield, coordinates, 
+crop species, harvest year, distance to tree strip, treatment applied on the field,
+site name, plot and the environmental variables of the field were included. 
+Original source columns (ranging from crop-specific abbreviations like "sm_dm", 
+"or_dm" to coordinate labels like "x", "y") were systematically mapped to a 
+unified naming scheme: temporal variables standardized to "year," spatial 
+variables to "distance_to_tree_strip" (meters), and crop production to 
+"yield" and "yield_straw" (units recorded separately per dataset: 
+g/m², t/ha, or kg/m²). Distance values extracted from plot identifiers via 
+regular expression pattern matching or continuous measurement values binned into 
+discrete 1, 4, 7, 12, 18, and 24 m categories for cross-dataset comparability. 
+Rows lacking crop yield data (indicating wood-only harvest events) were excluded, 
+as they provide no information on the primary response variable. Area-weighted 
+aggregate measurements (AFcrop entries) were excluded to retain only direct field 
+observations.
+
+
+================================================================================
+BROAD PATTERN: SYSTEMATIC STANDARDIZATION
+================================================================================
+
+THREE CORE COLUMN CATEGORIES STANDARDIZED ACROSS ALL DATASETS:
+
+1. TEMPORAL VARIABLE
+   Original names: harvest_year, embedded in date fields
+   Standard name: year
+   
+2. SPATIAL DISTANCE VARIABLE
+   Original formats: Embedded in plot ID (regex extraction), separate column, 
+                     continuous values
+   Standard name: distance_to_tree_strip (units: meters)
+   Special handling: Koch25 binned continuous values
+   
+3. CROP PRODUCTION METRICS
+   Original names: Crop-specific abbreviations (sm_dm, or_dm, sb_dm, 
+                   corn_dry_weight_t_per_ha, grain_kg_m2, grass_dm, 
+                   yield_wweight, etc.)
+   
+   Standard names:
+   - yield = primary production metric (grain, corn, or grass dry mass)
+   - yield_straw = secondary biomass (straw, chaff, or total plant dry matter)
+   - yield_total = when both components recorded separately
+
+
+CONSISTENT EXCLUSION RULE ACROSS ALL DATASETS:
+
+Rows excluded when yield is NA (Lines 104, 150, 183, 213, 387, 422):
+- Rationale: Agroforestry trials sometimes harvested only wood/tree biomass 
+             with no crop yield
+- Impact: These rows had no data on the primary response variable (crop 
+         production) and would not contribute to distance-effect models
+
+Special exclusions:
+- AFcrop entries (Lines 307, 336): Weighted aggregates, not primary observations
+- Distance extraction failures (e.g., control plots): Rows with NA in 
+  distance_to_tree_strip retained but flagged (represent unlocated control sites)
+
+
+================================================================================
+SUMMARY OF SYSTEMATIC COLUMN NAME STANDARDIZATION
+================================================================================
+
+All datasets underwent standardized column name harmonization to enable 
+comparative analysis. Below is the complete mapping:
+
+DATASET              ORIGINAL COLUMN NAME              ORIGINAL YIELD COLUMN DESCRIPTION                                   STANDARDIZED NAME        LINE
+===================================================================================================================================================================
+SIGNAL16             harvest_year                     x                                                                    year                     25
+SIGNAL16             product_crop_grass_row_and_mono  x                                                                    crop                     26
+SIGNAL16             straw_or_grass_dry_mass_2016     Straw (for crops) or grass (for grassland) dry mass.                yield_straw             27
+                                                  grams per square meter per year. Straw: plot combine
+                                                  sampling, then drying of sample; grass: hand sampling,
+                                                  then drying of sample.
+SIGNAL16             grain_corn_or_grass_dry_mass_16  Grain (for crops) or corn (shredded) dry mass.                      yield                    28
+                                                  Grams per square meter per year. Grain: plot combine
+                                                  sampling, then drying of sample.
+
+Wendhausen 1920      sm_dm                            Dry matter yield silage maize                                        yield                    101
+Wendhausen 2021      sb_dm_straw                      Dry matter yield summer barley                                       yield_straw             147
+Wendhausen 2021      sb_dm                            Dry matter yield summer barley                                       yield                    148
+Wendhausen 2022      or_dm                            Dry matter yield oilseed rape                                        yield                    180
+Wendhausen 2023      sm_dm                            Dry matter yield silage maize                                        yield                    210
+
+Dornburg 1823        harvest_year                     x                                                                    year                     280
+Dornburg 1823        grain_or_corn_dry_mass           Crops were harvested with a plot combine within an area             yield                    281
+                                                  of 17.5 m² (1.75 m × 10 m) at each sampling distance.
+                                                  For the calculation of dry matter, parts of the
+                                                  harvested crop were dried in an oven at 60 °C until a
+                                                  constant mass was reached.
+
+Vechta               harvest_year                     x                                                                    year                     318
+Vechta               grain_or_corn_dry_mass           Crops were harvested with a plot combine within an area             yield                    319
+                                                  of 17.5 m² (1.75 m × 10 m) at each sampling distance.
+                                                  For the calculation of dry matter, parts of the
+                                                  harvested crop were dried in an oven at 60 °C until a
+                                                  constant mass was reached.
+
+Reiffenhausen        corn_2016_winter_barley          Mass of winter barley grain in 2016.                                yield                    377
+Reiffenhausen        straw_2016_winter_barley         Mass of winter barley straw in 2016.                                yield_straw             378
+Reiffenhausen        corn_2017_rapeseed               Mass of rapeseed seeds in 2017.                                     yield                    377
+Reiffenhausen        straw_2017_rapeseed              Mass of rapeseed straw in 2017.                                     yield_straw             378
+Reiffenhausen        signal_code                      x                                                                    plot                     379
+
+Mariensee 1719       grass_dm                         Dry matter yield grass                                               yield                    407
+Mariensee 1719       longitude                        x                                                                    lon                      408
+Mariensee 1719       latitude                         x                                                                    lat                      409
+
+Forst 1920           x                                x                                                                    lon                      451
+Forst 1920           y                                x                                                                    lat                      452
+Forst 1920           corn_dry_weight_t_per_ha         The dry weight of corn in t/ha. Calculated as follows:             yield                    458
+                                                  corn_dry_weight_t_per_ha =
+                                                  ((fresh_weight_corn_kg /
+                                                  (1 + corn_moisture_content)) /
+                                                  Harvested_area_m2) * 10
+Forst 1920           straw_dry_weight_t_per_ha        The dry weight of straw in t/ha. Calculated as follows:            yield_straw             459
+                                                  straw_dry_weight_t_per_ha =
+                                                  ((fresh_weight_straw_kg /
+                                                  (1 + straw_moisture_content)) /
+                                                  Harvested_area_m2) * 10
+Forst 1920           crop_type                        x                                                                    crop                     460
+
+Gladbacherhof        grain_kg_m2                      no metadata                                                          yield                    498
+Gladbacherhof        biomass_kg_m2                    no metadata                                                          yield_straw             499
+Gladbacherhof        total_kg_m2                      no metadata                                                          yield_total             500
+Gladbacherhof        distance                         x                                                                    distance_to_tree_strip  501
+Gladbacherhof        db_site_name                     x                                                                    plot                     503
+
+Koch25               treatment                        x                                                                    tree_species            525
+Koch25               p_dist                           x                                                                    distance_to_tree_strip  527
+Koch25               yield_wweight                    no metadata                                                          yield                    528
+
+
+================================================================================
+SIGNAL16 DATASET (Lines 26–109)
+================================================================================
+
+LINE    DECISION                                    RATIONALE
+================================================================================
+28      Applied janitor::clean_names()             Standardized all column names 
+                                                    to snake_case format
+
+30, 32  Added data_id and yield_unit fields         Enabled tracking of data source 
+                                                    and standardized units across 
+                                                    datasets
+
+37, 38  Added distance_to_tree_strip extracted      Extracted numeric distance value 
+        via regex from id column                    (e.g., "1m", "4m", "7m") from 
+                                                    plot ID for spatial analysis
+
+49      EXCLUDED ROWS WHERE BOTH                   NAs were excluded as they do not  
+        yield_straw AND yield ARE NA               contribute to the analysis
+
+57-60      Split dataset by site                       Separate processing required for 
+        (Dornburg, Forst, Wendhausen,              each field; Mariensee had 
+        Mariensee)                                  different crop type
+
+82-84   MARIENSEE: Swapped yield columns            Mariensee is grassland, not grain 
+        (yield_straw ↔ yield)                       crop, so the grass yield was reported 
+                                                    in the "yield_straw" column, however  
+                                                    for this analysis it has to be counted 
+                                                    as yield. 
+
+
+
+
+================================================================================
+WENDHAUSEN 2016–2023 (Lines 125-250)
+================================================================================
+
+MULTIPLE YEARLY DATASETS WITH DIFFERENT CROPS
+
+LINE                     DECISION                                      RATIONALE
+================================================================================================
+
+136, 170, 198, 225       EXCLUDED ROWS WITH NA IN yield                 Rows where only wood was harvested
+                                                                      (no crop yield) were excluded because
+                                                                      they provided no crop production data.
+
+147, 177, 204, 231       Bound 5 yearly datasets together              Assembled full 2016–2023 time series.
+                         (bind_rows)
+
+================================================================================
+DORNBURG 2016–2023 (Lines 263-347)
+================================================================================
+
+LINE    DECISION                                    RATIONALE
+================================================================================
+271-272     EXTRACTED distance_to_tree_strip            Numeric distance needed for 
+        FROM id COLUMN VIA REGEX                    spatial analysis; embedded in 
+                                                    plot code
+
+281-284 Extracted treatment variable (fertilizer)  Site codes contained treatment 
+        from site name                              information (normal/reduced 
+                                                    fertilizer)
+
+310     FILTERED TO "DORNBURG" FIELD ONLY           Dataset included both Dornburg 
+                                                    and Vechta; separated for 
+                                                    independent analysis
+
+325     EXCLUDED ROWS CONTAINING "AFcrop"           AFcrop rows are area-weighted 
+        IN id                                       aggregates of agroforestry 
+                                                    distances, not true field 
+                                                    measurements; would double-count 
+                                                    data
+
+
+================================================================================
+VECHTA (Lines 356-401)
+================================================================================
+
+LINE    DECISION                                    RATIONALE
+================================================================================
+356     Subset from Dornburg-Vechta merged          Same source file; different 
+        dataset                                     spatial location requiring 
+                                                    separate analysis
+
+383     EXCLUDED ROWS CONTAINING "AFcrop"           Same rationale as Dornburg 
+        IN id                                       (aggregated proxy measurements, 
+                                                    not direct observations)
+
+
+================================================================================
+REIFFENHAUSEN (Lines 411-466)
+================================================================================
+
+LINE    DECISION                                    RATIONALE
+================================================================================
+422-430     APPLIED pivot_longer() TO RESHAPE            Original data had separate 
+        WIDE-FORMAT YIELD DATA                      columns per crop-year; 
+                                                    restructured to long format for 
+                                                    analysis
+
+439-440     EXTRACTED distance_to_tree_strip            Numeric distance embedded in 
+        FROM distance_from_tree_row COLUMN          text field
+
+445     EXCLUDED ROWS WITH NA IN yield              Non-productive rows (only wood 
+                                                    harvested)
+
+
+================================================================================
+MARIENSEE 2017–2018 (Lines 478-527)
+================================================================================
+
+LINE    DECISION                                    RATIONALE
+================================================================================
+400     DID NOT MERGE signal16 Mariensee data       2017 values differ between 
+                                                    SIGNAL16 and mariensee1719 
+                                                    datasets; source of discrepancy 
+                                                    unknown; kept separate to 
+                                                    preserve data integrity
+
+517     EXCLUDED ROWS WITH NA IN yield              Wood-only harvest rows lack 
+                                                    production data
+
+
+================================================================================
+FORST 2016–2020 (Lines 536-603)
+================================================================================
+
+LINE    DECISION                                    RATIONALE
+================================================================================
+552-553     EXTRACTED YEAR FROM DATE COLUMN             Temporal variable standardized 
+                                                    across datasets
+
+593     Bound SIGNAL16 Forst (2016–2017) with      Assembled longer time series; 
+        Forst 1920 (2019–2020)                      2018 gap remains
+
+
+================================================================================
+GLADBACHERHOF 2021–2022 (Lines 613-661)
+================================================================================
+
+LINE    DECISION                                    RATIONALE
+================================================================================
+627     CONVERTED distance_to_tree_strip TO         Distance field mixed text 
+        NUMERIC; INTRODUCED NAs FOR CONTROLS        ("control") and numeric values; 
+                                                    explicit NA introduction flags 
+                                                    non-spatial control locations
+
+631-633     EXTRACTED YEAR FROM DATE COLUMN             Temporal variable standardized						
+
+================================================================================
+KOCH25 2012–2023 (Lines 674-742)
+================================================================================
+
+LINE    DECISION                                    RATIONALE
+================================================================================
+690-696 BINNED CONTINUOUS distance_to_tree_strip    Raw data had continuous 
+        INTO DISCRETE CATEGORIES                    measurements; binned to match 
+        (1, 4, 7, 12, 18, 24 m)                     discrete distance intervals in 
+                                                    other datasets for comparability
+
+714-723 AGGREGATED RAW MEASUREMENTS TO PLOT MEANS   Raw data had 28,174 rows 
+                                                    (repeated sub-plot measurements); 
+                                                    reduced to 667 rows by calculating 
+                                                    mean yield per plot-year-distance 
+                                                    combination
+
+718-719     Added sd_yield and n (sample size)          Preserved variation information 
+                                                    despite aggregation
+742     EXCLUDED MEASUREMENTS BEFORE 2016          Since no other dataset reported data 
+                                                    before 2016
+
+
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
