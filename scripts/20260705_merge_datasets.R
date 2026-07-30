@@ -13,7 +13,7 @@ dornburg      <- read_csv("data/AnalysisData/20260701_dornburg.csv")
 vechta        <- read_csv("data/AnalysisData/20260702_vechta.csv")
 reiffenhausen <- read_csv("data/AnalysisData/20260702_reiffenhausen.csv")
 mariensee     <- read_csv("data/AnalysisData/20260702_mariensee.csv")
-forst         <- read_csv("data/AnalysisData/20260702_forst.csv")
+forst         <- read_csv("data/AnalysisData/20260722_forst.csv")
 gladbacherhof <- read_csv("data/AnalysisData/20260703_gladbacherhof.csv")
 koch          <- read_csv("data/AnalysisData/20260705_koch1623.csv")
 
@@ -138,4 +138,36 @@ all_fields <- all_fields %>%
   )
 
 # write 
-write.csv(all_fields, file = "data/AnalysisData/20260705_all_fields.csv", row.names = FALSE)
+write.csv(all_fields, file = "data/AnalysisData/20260722_all_fields.csv", row.names = FALSE)
+
+
+
+# Clean the merged dataset ------------------------------------------------
+rm(list=ls())
+df <- read.csv("data/AnalysisData/20260722_all_fields.csv")
+str(df)
+
+# (1) Vechta has a typo in the year 2020
+dfna <- df[df$field == "Vechta" & df$year == 2020 & grepl("_4m$", df$plot), ]
+df <- df[!rownames(df) %in% rownames(dfna), ]
+# check
+dfna <- df[df$field == "Vechta" & df$year == 2020 & grepl("_4m$", df$plot), ]
+dfna
+
+# (2) for Forst changed value manually
+
+# (3) Dornburg na kick out 
+# before 1480 obs
+df <- df[!is.na(df$yield), ]
+# now 1478
+
+# (4) kick out Gladbacherhof 2022 because they have a labelling problem
+dfna <- df[df$field == "Gladbacherhof" & df$year == 2022, ]
+df <- df[!rownames(df) %in% rownames(dfna), ]
+# now 1328 
+
+write.csv(df, file = "data/AnalysisData/20260723_all_fields.csv", row.names = FALSE)
+
+# rework further 26/7/2026
+
+df <-  read.csv("data/AnalysisData/20260723_all_fields.csv")

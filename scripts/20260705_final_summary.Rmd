@@ -15,7 +15,7 @@ library(rnaturalearth)
 ```
 
 ```{r}
-all_fields <- read_csv("../data/AnalysisData/20260705_all_fields.csv")
+all_fields <- read_csv("../data/AnalysisData/20260723_all_fields.csv")
 ```
 
 
@@ -57,6 +57,18 @@ all_fields %>%
   theme_minimal() +
   labs(title = "observations per year", x = "year", y = "number of observations")
 ```
+
+```{r}
+all_fields %>%
+  count(year, field) %>%
+  ggplot(aes(x = year, y = n, fill = field)) +
+  geom_col() +
+  facet_grid(~field) +
+  theme_minimal() +
+  labs(title = "observations per year", x = "year", y = "number of observations")
+
+```
+
 
 ## yield distribution
 
