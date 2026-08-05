@@ -610,43 +610,32 @@ write.csv(forst1620, file = "data/AnalysisData/20260702_forst.csv", row.names = 
 #   coordinates - lat lon
 # =============================================================================
 
-gladbacherhof <- readxl::read_excel("data/ZALF_Hessen_2122/AFGH1_Yield_All.xlsx")
+gladbacherhof <- read_csv("data/Gladbacherhof21/yield.csv")
 gladbacherhof <- janitor::clean_names(gladbacherhof)
 
 names(gladbacherhof)
 head(gladbacherhof)
 colSums(is.na(gladbacherhof)) 
 
-gladbacherhof$data_id <- "gladbacherhof2122"
+gladbacherhof$data_id <- "gladbacherhof21"
 gladbacherhof$field <- "Gladbacherhof"
-gladbacherhof$yield_unit <- "kg/m2"
-names(gladbacherhof)[names(gladbacherhof) == "grain_kg_m2"] <- "yield"
-names(gladbacherhof)[names(gladbacherhof) == "biomass_kg_m2"] <- "yield_straw"
-names(gladbacherhof)[names(gladbacherhof) == "total_kg_m2"] <- "yield_total"
+gladbacherhof$yield_unit <- "g/m2"
+gladbacherhof$year <- 2021
+names(gladbacherhof)[names(gladbacherhof) == "grain_g"] <- "yield"
+names(gladbacherhof)[names(gladbacherhof) == "biomass_g"] <- "yield_straw"
 names(gladbacherhof)[names(gladbacherhof) == "distance"] <- "distance_to_tree_strip"
-gladbacherhof$distance_to_tree_strip <- as.numeric(gladbacherhof$distance_to_tree_strip) # 12 NAs will be introduced, those are control values
-names(gladbacherhof)[names(gladbacherhof) == "db_site_name"] <- "plot"
-
-# date to year
-gladbacherhof <- gladbacherhof %>%
-  mutate(year = as.integer(format(date, "%Y"))) %>%
-  select(-date) 
-
-
-gladbacherhof <- gladbacherhof[, c(1:4,6:7,10:20)]
+names(gladbacherhof)[names(gladbacherhof) == "sample"] <- "plot"
 
 # check 
-table(gladbacherhof$year) # 162 in 2021, 150 in 2022
-table(gladbacherhof$year, gladbacherhof$transect) # A,B,C,D in 2021 and 2022 each 36, in 2022 additional E transect 12 
-table(gladbacherhof$year, gladbacherhof$site) # 6 control measurements each year 
+table(gladbacherhof$year) # 144
+table(gladbacherhof$year, gladbacherhof$transect) # A 36  B 36 C 36 D 36
+table(gladbacherhof$year, gladbacherhof$plot) # each unique 
 
 levels(as.factor(gladbacherhof$row)) # 6 tree rows
-levels(as.factor(gladbacherhof$transect)) # 5 transects (4 each tear, 1 add in 2022)
-nrow(gladbacherhof) # 312: 4 transect, 3 distance, 2 directions, 6 tree rows, 2 years, 12 controls, 12 from an additional transect (E in 2022)
+levels(as.factor(gladbacherhof$transect)) # 4 transects 
+nrow(gladbacherhof) # 144
 
 colSums(is.na(gladbacherhof)) 
-head(gladbacherhof, n=10)
-nrow(gladbacherhof) # 312
 
 # gladbacherhof has a similar design with transects, and up and down directions
 # there are 3 distances : 2.5, 6 and 10.5 m 
@@ -658,7 +647,8 @@ nrow(gladbacherhof) # 312
 # The tree strips represent a successional, multifunctional woody polyculture (Lovell et al., 2018), designed as a within- and between-row diversified system with biomass (Populus spp., five different clones), high-value timber (Juglans regia, Pyrus communis, Prunus avium, Sorbus domestica and Sorbus torminalis), fruit trees (Malus domestica, 4 different varieties) and Sambucus nigra as understory shrubs (Figure S2A). 
 
 gladbacherhof$tree_species <- "mixed"
-write.csv(gladbacherhof, file = "data/AnalysisData/20260703_gladbacherhof.csv", row.names = FALSE) 
+gladbacherhof$crop <- "wheat"
+write.csv(gladbacherhof, file = "data/AnalysisData/20260730_gladbacherhof.csv", row.names = FALSE) 
 
 
 # Koch 25 =============================================================================
@@ -679,23 +669,21 @@ koch25 <- janitor::clean_names(koch25)
 
 names(koch25)[names(koch25) == "treatment"] <- "tree_species"
 
-names(koch25)[names(koch25) == "p_dist"] <- "distance_to_tree_strip"
-names(koch25)[names(koch25) == "yield_wweight"] <- "yield"
+koch25 <- koch25  |>  
+  mutate( 
+    distance_to_tree_strip = case_when( 
+      p_dist < 1.1 ~ 1, 
+      p_dist < 4.1 ~ 4, 
+      p_dist < 7.1 ~ 7, 
+      p_dist < 12.1 ~ 12, 
+      p_dist < 18.1 ~ 18, 
+      p_dist >= 18.1 ~ 24 ) ) |> 
+  group_by(year, id, block, tree_species, crop, distance_to_tree_strip) |>  
+  summarise(yield = mean(yield_wweight, na.rm = TRUE))
 
-names(koch25)
-head(koch25)
+table(koch25$distance_to_tree_strip) #    4    7   12   18   24 
+                                    #   151  47 159 160 160 
 
-summary(koch25$distance_to_tree_strip)
-
-koch25 <- koch25 %>% 
-  mutate(distance_to_tree_strip = case_when(distance_to_tree_strip < 1.1 ~ 1,
-                                            distance_to_tree_strip < 4.1 ~ 4,
-                                            distance_to_tree_strip < 7.1 ~ 7,
-                                            distance_to_tree_strip < 12.1 ~ 12,
-                                            distance_to_tree_strip < 18.1 ~ 18,
-                                            distance_to_tree_strip > 18.1 ~ 24))
-
-summary(koch25$distance_to_tree_strip)
 
 # check:
 colSums(is.na(koch25)) # 0
@@ -705,27 +693,12 @@ head(koch25, n = 25)
 # calculate means per id and block
 
 koch25$plot <- paste(
+  "Ih",
   koch25$id,
-  koch25$block,
   koch25$distance_to_tree_strip,
   sep = "_"
 )
 
-koch25 <- koch25 %>%
-  group_by(plot, year, tree_species, aspect, crop, distance_to_tree_strip) %>%
-  summarise(
-    mean_yield = mean(yield, na.rm = TRUE),
-    sd_yield   = sd(yield, na.rm = TRUE),
-    n          = n(),
-    .groups = "drop"
-  ) %>% 
-  mutate(yield = mean_yield) %>% 
-  select(-mean_yield)
-
-# check
-head(koch25)
-colSums(is.na(koch25)) # 0
-nrow(koch25) # 667
 
 table(koch25$year) # 96 2012, 101 2014, 90 2016, 102 2018, 100 2021, 88 2022, 100 2023 
 
@@ -740,8 +713,8 @@ koch25$lon <- lon
 koch25$yield_unit <- "t/ha" # known from the publicaiton
 
 koch_ab16 <- (koch25[(koch25$year > 2015), ])
-write.csv(koch_ab16, file = "data/AnalysisData/20260705_koch1623.csv", row.names = FALSE) 
-write.csv(koch25, file = "data/AnalysisData/20260705_koch1223.csv", row.names = FALSE) 
+write.csv(koch_ab16, file = "data/AnalysisData/20260730_koch1623.csv", row.names = FALSE) 
+write.csv(koch25, file = "data/AnalysisData/20260730_koch1223.csv", row.names = FALSE) 
 
 
 # =============================================================================

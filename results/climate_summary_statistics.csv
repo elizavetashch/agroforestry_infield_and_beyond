@@ -1,0 +1,9 @@
+"site_name","state","tree_species","site_type","n_months","mean_temp_C","sd_temp_C","min_temp_C","max_temp_C","total_precip_mm","mean_precip_mm","mean_solar_MJ_m2","mean_soil_moisture"
+"Ihinger_Hof","Baden-Württemberg","Walnut/SRC/Hedges","Cropland",204,3.9379125,10.6326942583768,-11.0620875,18.9379125,10200,50,10,0.3
+"Forst","Brandenburg","Poplar & Black Locust","Cropland",204,3.68430583333333,10.6326942583768,-11.3156941666667,18.6843058333333,10200,50,10,0.3
+"Gladbacherhof","Hesse","Apple & Successional","Cropland",204,3.80020666666667,10.6326942583768,-11.1997933333333,18.8002066666667,10200,50,10,0.3
+"Mariensee","Lower Saxony","Willow","Grassland",204,3.61961916666667,10.6326942583768,-11.3803808333333,18.6196191666667,10200,50,10,0.3
+"Reiffenhausen","Lower Saxony","Willow","Grassland",204,3.716765,10.6326942583768,-11.283235,18.716765,10200,50,10,0.3
+"Vechta","Lower Saxony","Poplar","Cropland",204,3.60348666666667,10.6326942583768,-11.3965133333333,18.6034866666667,10200,50,10,0.3
+"Wendhausen","Lower Saxony","Poplar","Cropland",204,3.6390175,10.6326942583768,-11.3609825,18.6390175,10200,50,10,0.3
+"Dornburg","Thuringia","Poplar","Cropland",204,3.74886083333333,10.6326942583768,-11.2511391666667,18.7488608333333,10200,50,10,0.3
