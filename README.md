@@ -1,5 +1,31 @@
 ## Papers
 
+### SIGNAL BONARES Information 
+
+<details>
+
+<ins>Source: </ins> 
+```
+https://www.bonares.de/service-portal/projects/signal?locale=en
+
+https://agroforst-info.de/signal/#toggle-id-1
+```
+
+- SIGNAL has studied rather simple **alley cropping** systems consisting of **poplar rows** grown as **short rotation plantations** in combination with a **conventional crop rotation**. **The scientists compared these agroforestry systems with the same crop rotation without trees and evaluated the following ecosystem functions**: Yield, carbon sequestration and greenhouse gas mitigation, soil nutrient cycling and water regulation, biodiversity and erosion control.
+
+Most Important Findings: 
+- no difference in crop yield compared to monocultures ("Although the presence of trees reduces yields in the first plant rows adjacent to the tree row, this is often compensated for by higher yields in the middle of the plant rows, so that there is no difference in crop yields compared to monoculture.")
+- These results indicate that there is potential for lower fertilizer rates without major yield reductions.
+- In agroforestry systems, biodiversity improves considerably compared to monoculture systems. Within a few years, the tree rows are teeming with earthworms, including deep burrowing species that can significantly improve the water absorption of the soil and are not found in pure cultures.
+- Spiders and the soil microbiome also increase biodiversity and can contribute to pest control. Phytopathological studies show a reduced risk of common plant diseases compared to monocultures.
+- The risk of wind erosion is also greatly reduced in agroforestry systems compared to pure cultures. The high water infiltration rates in the tree rows as a result of the deep burrowing earthworms suggest that the risk of water erosion was also reduced.
+- **Why is agroforestry not currently being used more widely?**: Our economic analyses show that it currently depends on the location whether agroforestry can compete with agriculture without trees. On some sites it is already economically viable, on others pure crops still have slight advantages. The costs associated with the establishment of agroforestry systems are often an important reason that prevents farmers from establishing agroforestry systems. Providing better financial support for farmers to establish agroforestry systems would make a significant difference.
+
+
+
+</details> 
+
+
 ### Yields adjacent to hedge rows declined significantly towards the alley center. Tree rows contributed to stable crop yields under fluctuating water availability in their proximity and up to the alley center on their leeward side while yields significantly varied with changing climatic water balance on the windward side.
 
 <details>
