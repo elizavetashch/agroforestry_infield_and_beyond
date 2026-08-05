@@ -291,4 +291,4 @@ dflulc <- dfmain %>%
   ) |> 
   select(-field.y)
 
-write.csv(dflulc, "./analysis_data/20260805_AFlulc.csv", row.names = FALSE)
+write.csv(dflulc, "./data/AnalysisData/20260805_AFlulc.csv", row.names = FALSE)
