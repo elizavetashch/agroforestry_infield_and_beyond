@@ -1,0 +1,52 @@
+  	yield tha
+Predictors 	Estimates 	CI 	p
+(Intercept) 	-0.23 	-1.56 – 1.10 	0.735
+mean slope 	-0.10 	-0.63 – 0.43 	0.719
+temp C mean 	-0.07 	-0.37 – 0.24 	0.664
+precip mm sum 	-0.26 	-0.40 – -0.12 	*<0.001*
+sun MJ m2 mean 	-0.34 	-0.44 – -0.23 	*<0.001*
+l contag 	-0.03 	-0.16 – 0.10 	0.654
+l np 	-0.05 	-0.29 – 0.19 	0.698
+l sidi 	1.07 	-2.14 – 4.29 	0.513
+l shdi 	-2.00 	-6.45 – 2.44 	0.377
+l ai 	8.84 	-11.40 – 29.07 	0.392
+l ed 	9.29 	-11.66 – 30.25 	0.385
+prop swf total 	0.03 	-0.05 – 0.11 	0.478
+distance to tree strip 	0.06 	0.05 – 0.06 	*<0.001*
+treeage 	-0.16 	-0.22 – -0.11 	*<0.001*
+year planting 	-0.29 	-0.62 – 0.04 	0.090
+crop unified [grass] 	-0.34 	-1.21 – 0.54 	0.451
+crop unified [maize] 	0.63 	0.36 – 0.89 	*<0.001*
+crop unified [oat] 	-0.00 	-0.14 – 0.13 	0.953
+crop unified [pea] 	-0.17 	-0.29 – -0.05 	*0.007*
+crop unified [potato] 	0.21 	-0.13 – 0.56 	0.222
+crop unified [rapeseed] 	-0.12 	-0.16 – -0.08 	*<0.001*
+crop unified [rye] 	-0.16 	-0.25 – -0.07 	*0.001*
+crop unified [wheat] 	0.05 	0.01 – 0.08 	*0.007*
+temp C mean × precip mm
+sum 	-0.39 	-0.87 – 0.10 	0.115
+temp C mean × sun MJ m2
+mean 	-0.16 	-0.52 – 0.21 	0.403
+precip mm sum × sun MJ m2
+mean 	-0.02 	-0.14 – 0.11 	0.803
+distance to tree strip ×
+treeage 	0.05 	0.04 – 0.06 	*<0.001*
+distance to tree strip ×
+year planting 	-0.01 	-0.01 – -0.00 	*<0.001*
+treeage × year planting 	-0.15 	-0.25 – -0.04 	*0.005*
+(temp C mean × precip mm
+sum) × sun MJ m2 mean 	-0.36 	-0.64 – -0.09 	*0.009*
+(distance to tree strip ×
+treeage) × year planting 	0.01 	0.00 – 0.02 	*0.028*
+Random Effects
+σ^2 	0.01
+τ_00 _data_id 	0.00
+τ_00 _field 	0.05
+τ_00 _year 	0.00
+ICC 	0.83
+N _data_id 	11
+N _field 	8
+N _year 	8
+Observations 	51774
+Marginal R^2 / Conditional R^2 	0.301 / 0.884
+

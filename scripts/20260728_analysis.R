@@ -6,7 +6,6 @@ library(tidyr)
 library(readr)
 library(ggplot2)
 library(car)
-library(car)
 library(lme4)
 
 fertilization <- read_csv("data/DataDescription_Fertilization.csv")

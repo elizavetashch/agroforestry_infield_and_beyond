@@ -85,7 +85,7 @@ years <- c(2017, 2018, 2019, 2020, 2021, 2022, 2023)
 
 
 for (i in seq_len(nrow(fields_buf_noforst))) {
-  par(mfrow=c(2, 4))
+  #par(mfrow=c(2, 4))
   for (year in years){
   site_name <- fields_buf_noforst[[site_col]][i]
   cat("Processing:", site_name, "\n")
