@@ -22,7 +22,7 @@ df <- df |>
     field == "Wendhausen" ~ 2008
   ))
 
-
+write.csv(df, "./analysis_data/20260805_AFyearplanting.csv", row.names = FALSE)
 
 
 # Collinearity check ------------------------------------------------------

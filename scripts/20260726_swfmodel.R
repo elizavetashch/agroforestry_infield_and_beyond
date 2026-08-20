@@ -11,7 +11,6 @@ library(geosphere) #distHaversine function
 
 # (1) Read the Data -------------------------------------------------------
 
-fieldpolygons <- read.csv("data/ArcGIS_Outputs/fieldpolygons.csv")
 
 fieldpolygons <- fieldpolygons %>% 
   mutate( 
@@ -23,7 +22,9 @@ fields_sf <- st_as_sf(fieldpolygons, coords = c("Longitude","Latitude"), crs = 4
 
 
 # (2) Extract Annulus Profile Function ------------------------------------
-
+df |> 
+mutate(boundary_min = fieldlength / 2,
+       boundary_max  = boundary_min + 1000)
 
 extract_annulus_profile <- function(point_coords, raster, radii) {
   results <- data.frame(radius = numeric(), prop_noncrop = numeric())
