@@ -1,0 +1,641 @@
+---
+title: "20260823_model"
+output: html_document
+date: "2026-08-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(ggplot2)
+library(refund)
+library(mgcv)
+library(nlme)
+library(lattice)
+```
+
+# Contents 
+
+(1) Hypotheses
+(2) Model Structure
+(3) Data Exploration 
+(4) Model run
+(5) Validation and Verification
+
+# (1) Hypotheses 
+The aim of this study is to assess whether there is an interactive effect between the intrinsic variation within the agroforestry system and the landscape heterogeneity on crop yield. And  if there is one, then how does it shape the crop yield.
+
+Hence, follwoing hypotheses are posed: 
+H1: If in-field heterogeneity is included in the regional yield model, then the model will perform better (lower AIC) than the model that does not include the in-field complexity term.
+H2: How does the interactive effect or the separate effect of those differ between fields included in this analysis and what affects the shift between those. 
+
+# (2) Model Structure
+In order to adress the named hypotheses the following model was designed. 
+The model is built to assess the effects of surrounding landscape, intrinsic spatial variation and field characteristica of the field (as environmental, design and management specifics) on field's agroforestry yield performance and follows the following srtucture: 
+
+*yield_tha ~ landscape heterogeneity (swf) + intrinsic variaton + field design*
+
+(1.1) landscape heterogeneity
+the effect of landscape heterogeneity is assessed throught the availability of small woody features around the field as studies show that those have an effect on yields performance. as in Galpern et al 2020 the approach of functional predictor is implemented as it is still unclear at what distance does the surrounding landscape has the biggest effect on yield an this possibly depends on field special characteristica. Hence, borrowing from Galpern et al pethodology refund:pfr function is implemented to model this relation. 
+
+(1.2) intrisic variation
+fields intrinsic variation is represented by the distance at which the sample of the yield was taken, agroforestry research suggests that the yield in agroforestry system depends on the distance of the crops sample to the tree line. the effect is modeled by a smooth function as it is not linear ans is scalar. 
+
+(1.3) field characteristica 
+field characteristica are specific for each field an hence act as bias correction. such are fields environmental conditions, soil t4exture, age of the agroforestry system and the trees within it. 
+
+
+# (3) Data Exploration
+
+Following the Zuur et al protocol from 2010 the following data exploration procedure wqas completed: 
+- outlier screening
+- distribution/homogeneity of the response
+- zero-inflation
+- collinearity 
+- relationships 
+- independence of observations
+
+## Matrices for every group and subgroup 
+
+```{r read data }
+df <- read.csv("C:\\Users\\Elizaveta/OneDrive - Universität Bayreuth\\Dokumente\\MasterThesis\\MA_RProject\\data\\AnalysisData\\20260823_full.csv")
+```
+
+```{r group and subgroup matrices}
+# ---- Numeric Variables  ----
+num_vars <- c("prop_swf", 
+              "l_contag", "l_np", "l_sidi", "l_shdi", "l_ai", "l_ed",
+              "distance_to_tree_strip", 
+              "temp_C_mean", "sun_MJ_m2_mean", "precip_mm_sum",
+              "clay", "sand", "silt",
+              "mean_slope", "min_slope", "max_slope" ,
+              "prop_swf_within", "fert_N", "treeage", "AFage", "area")
+
+# ---- Surrounding landscape heterogeneity: small woody features  ----
+swf <- df |>
+  dplyr::select(id, distance, swf_year, prop_swf) |>
+  unique() |>
+  pivot_wider(names_from = distance, values_from = prop_swf) |>
+  arrange(id)
+
+id_order <- swf$id
+swf_mat    <- as.matrix(swf[, -c(1, 2)])
+grid     <- as.numeric(colnames(swf_mat))
+
+
+# ---- Surrounding landscape heterogeneity: landscape metrics ----
+landscape_metrics <- df |>
+  dplyr::select(id, l_contag, l_np, l_sidi, l_shdi, l_ai, l_ed) |>
+  unique() |>
+  arrange(id)
+
+id_lm <- landscape_metrics$id
+lm_mat    <- as.matrix(landscape_metrics[, -c(1)])
+lm_cols     <- as.character(colnames(lm_mat))
+
+stopifnot(id_order == id_lm)
+
+# ---- In-field spatial variation ----
+intrinsic_variation <- df |>
+  dplyr::select(id, distance_to_tree_strip) |>
+  unique() |>
+  arrange(id)
+
+id_iv <- intrinsic_variation$id
+iv_mat    <- as.matrix(intrinsic_variation[, -c(1)])
+iv_cols     <- as.character(colnames(iv_mat))
+
+stopifnot(id_order == id_iv)
+
+# ---- Environmental: climatic variables ----
+climatic <- df |>
+  dplyr::select(id, precip_mm_sum, sun_MJ_m2_mean, temp_C_mean) |>
+  unique() |>
+  arrange(id)
+
+id_c <- climatic$id
+c_mat    <- as.matrix(climatic[, -c(1)])
+c_cols     <- as.numeric(colnames(c_mat))
+
+stopifnot(id_order == id_c)
+
+# ---- Environmental: soil ----
+# adjust clay/silt/sand column names to match your dataset
+soil <- df |>
+  dplyr::select(id, clay, silt, sand) |>
+  unique() |>
+  arrange(id)
+
+id_s <- soil$id
+s_mat    <- as.matrix(soil[, -c(1)])
+s_cols     <- as.character(colnames(s_mat))
+
+stopifnot(id_order == id_s)
+
+# ---- Environmental: elevation ----
+elevation <- df |>
+  dplyr::select(id, mean_slope, min_slope, max_slope) |>
+  unique() |>
+  arrange(id)
+
+id_el <- elevation$id
+el_mat    <- as.matrix(elevation[, -c(1)])
+el_cols     <- as.character(colnames(el_mat))
+
+stopifnot(id_order == id_el)
+
+# ---- Field design ----
+field_design <- df |>
+  dplyr::select(id, prop_swf_within, fert_N, treeage, AFage, area) |>
+  unique() |>
+  arrange(id)
+
+id_fd <- field_design$id
+fd_mat    <- as.matrix(field_design[, -c(1)])
+fd_cols     <- as.character(colnames(fd_mat))
+
+stopifnot(id_order == id_fd)
+
+
+# ---- Identifiers ----
+identifiers <- df |>
+  dplyr::select(id, field) |>
+  unique() |>
+  arrange(id)
+
+
+namestemplate <- c("# ---- Surrounding landscape heterogeneity: small woody features  ----",
+                   "swf, id_order, swf_mat, grid",
+                   "# ---- Surrounding landscape heterogeneity: landscape metrics ----",
+                   "landscape_metrics, id_lm, lm_mat, lm_cols",
+                   "# ---- In-field spatial variation ----",
+                   "intrinsic_variation, id_iv, iv_mat, iv_cols",
+                    "# ---- Environmental: climatic variables ---- ", 
+                   "climatic, id_c, c_mat, c_cols",
+                   " # ---- Environmental: soil ---- ",  
+                   "soil, id_s, s_mat, s_cols",
+                    "# ---- Environmental: elevation ---- ", 
+                   "elevation, id_el, el_mat, el_cols ",
+                    "# ---- Field design ---- ", 
+                    "field_design, id_fd, fd_mat, fd_cols", 
+                    "# ---- Identifiers ----",
+                    "identifiers")
+```
+
+## Outliers
+
+No outliers detected. 
+
+```{r outliers, fig.height=8, fig.width=7}
+# namestemplate
+
+# ---- Surrounding landscape heterogeneity: small woody features  ----"
+swf |> 
+  select(-c(1,2)) |> 
+  mutate(row = row_number()) |>
+  pivot_longer(-row, names_to = "variable", values_to = "value") |> 
+  ggplot(aes(x = value, y = row)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  facet_wrap(~variable, scales = "free_x") +
+  theme_bw() +
+  labs(y = "observation order", x = NULL,
+       title = "SWF: Cleveland dotplots for outlier screening")
+
+# # ---- Surrounding landscape heterogeneity: landscape metrics ----
+landscape_metrics |> 
+  select(-c(1)) |> 
+  mutate(row = row_number()) |>
+  pivot_longer(-row, names_to = "variable", values_to = "value") |> 
+  ggplot(aes(x = value, y = row)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  facet_wrap(~variable, scales = "free_x") +
+  theme_bw() +
+  labs(y = "observation order", x = NULL,
+       title = "Landscape metrics: Cleveland dotplots for outlier screening")
+
+# # ---- In-field spatial variation ----
+intrinsic_variation |> 
+  select(-c(1)) |> 
+  mutate(row = row_number()) |>
+  pivot_longer(-row, names_to = "variable", values_to = "value") |> 
+  ggplot(aes(x = value, y = row)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  facet_wrap(~variable, scales = "free_x") +
+  theme_bw() +
+  labs(y = "observation order", x = NULL,
+       title = "In field variation: Cleveland dotplots for outlier screening")
+
+# # ---- Environmental: climatic variables ----
+climatic |> 
+  select(-c(1)) |> 
+  mutate(row = row_number()) |>
+  pivot_longer(-row, names_to = "variable", values_to = "value") |> 
+  ggplot(aes(x = value, y = row)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  facet_wrap(~variable, scales = "free_x") +
+  theme_bw() +
+  labs(y = "observation order", x = NULL,
+       title = "Climate: Cleveland dotplots for outlier screening")
+
+# # ---- Environmental: soil ----
+soil |> 
+  select(-c(1)) |> 
+  mutate(row = row_number()) |>
+  pivot_longer(-row, names_to = "variable", values_to = "value") |> 
+  ggplot(aes(x = value, y = row)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  facet_wrap(~variable, scales = "free_x") +
+  theme_bw() +
+  labs(y = "observation order", x = NULL,
+       title = "Soil: Cleveland dotplots for outlier screening")
+
+# # ---- Environmental: elevation ----
+elevation |> 
+  select(-c(1)) |> 
+  mutate(row = row_number()) |>
+  pivot_longer(-row, names_to = "variable", values_to = "value") |> 
+  ggplot(aes(x = value, y = row)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  facet_wrap(~variable, scales = "free_x") +
+  theme_bw() +
+  labs(y = "observation order", x = NULL,
+       title = "Elevation: Cleveland dotplots for outlier screening")
+
+# # ---- Field designn ----
+field_design |> 
+  select(-c(1)) |> 
+  mutate(row = row_number()) |>
+  pivot_longer(-row, names_to = "variable", values_to = "value") |> 
+  ggplot(aes(x = value, y = row)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  facet_wrap(~variable, scales = "free_x") +
+  theme_bw() +
+  labs(y = "observation order", x = NULL,
+       title = "Field Design: Cleveland dotplots for outlier screening")
+```
+
+## Distribution of the response variable: yield tha
+
+```{r distribution of yield}
+
+ggplot(df, aes(x = seq_along(yield_tha), y = yield_tha)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  theme_bw() +
+  labs(
+    x = "Observation",
+    y = "Yield (t/ha)"
+  )
+
+ggplot(df, aes(x = seq_along(yield_tha), y = yield_tha, color = crop_unified)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  theme_bw() +
+  labs(
+    x = "Observation",
+    y = "Yield (t/ha)"
+  )
+
+ggplot(df, aes(x = seq_along(yield_tha), y = yield_tha, color = distance_to_tree_strip)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  theme_bw() +
+  labs(
+    x = "Observation",
+    y = "Yield (t/ha)"
+  )
+
+ggplot(df, aes(x = yield_tha)) +
+  geom_histogram(bins = 30, colour = "white") +
+  theme_bw() +
+  labs(title = "Distribution of yield_tha")
+
+ggplot(df, aes(x = crop_unified, y = yield_tha)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(title = "yield_tha by crop", x = NULL) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+It is clear that the maize has a completely different scale of yield within the dataset. It is because in comparision to all the other crops sillage maize is produced only to feed the animals and hence the whole biomass is harvested and not only the grain as it is for all the other crops. Hence, the yield is on a different scale and all teh yield in the dataset has to be scaled in order for the results to be interpretable and consistent across crops. 
+
+## Zero-inflation
+
+```{r zero-check}
+sapply(df[num_vars], function(x) mean(x == 0, na.rm = TRUE))
+```
+Fertilization and the proportion of small woody features in the dataset are zero infliated a bit due to the fact that 
+- for fertilization not all the fertilization management could be found for all fields only for a part of them 
+- for prop of small woofy features sometimes there was no swf present in the buffer which is also fine and to be expected. 
+- treeage sometimes is zero when the system just started or was harvested
+- AFage is zero when the system just harvested
+
+## Collinearity among scalar predictors
+
+```{r collinearity, fig.width=7, fig.height=6}
+cor_mat <- df |>
+  select(all_of(num_vars)) |>  
+  cor(use = "pairwise.complete.obs")
+
+round(cor_mat, 2)
+```
+| Variable | Negative Cor | Positive Cor | Interpretation |
+|:---|:---|:---|:---|
+| `prop_swf` | Correlates negatively with `l_contag` (-0.41), clay (-0.21), `fert_N` (-0.19), `treeage` (-0.18), `AFage` (-0.26), and area (-0.34). | Slightly positive correlation with mean slope (0.20), min slope (0.27), and `prop_swf_within` (0.36). | `CONTAG` is an aggregation metric based on cell adjacencies and describes the probability that two randomly selected cells belong to the same class. More small woody features may reduce landscape aggregation because they introduce small patches that disrupt the landscape. Clay: no interpretation. Slope: no clear interpretation. Field design: no clear interpretation. |
+| `l_contag` | Correlates negatively with min slope (-0.54), mean slope (-0.49), `prop_swf` (-0.41), `l_shdi` (-0.39), `l_sidi` (-0.53), `l_ed` (-0.34), `prop_swf_within` (-0.22), sand (-0.20), and precipitation (-0.19). | Strongly positively correlated with area (0.74), `treeage` (0.52), `AFage` (0.50), `l_ai` (0.34), and clay (0.32). | Landscape metrics were calculated within a 3000 m buffer including the field. Large fields may create larger class areas, increasing the contagion index. The negative correlation with Shannon and Simpson diversity is expected because these metrics capture different aspects of landscape structure. |
+| `l_np` | Correlates negatively with `l_ai` (-0.75), `temp_C_mean` (-0.56), solar radiation (-0.37), sand (-0.36), max slope (-0.31), `fert_N` (-0.30), and `treeage` (-0.29). | Positively correlated with `l_shdi`, `l_ed` (0.76), precipitation (0.49), clay (0.39), silt (0.32), mean slope (0.32), and min slope (0.45). | Number of patches within the 3000 m buffer. Wetter, cooler, and flatter fields tend to have more land-cover patches. |
+| `l_shdi` | Correlates negatively with `prop_swf_within` (-0.59), `treeage` (-0.46), `l_ai` (-0.41), area (-0.41), `l_contag` (-0.39), `temp_C_mean` (-0.29), sand (-0.28), and `sun_MJ_m2_mean` (-0.21). | Positively correlated with mean slope (0.65), min slope (0.58), `l_ed` (0.45), max slope (0.43), clay (0.32), precipitation (0.31), and silt (0.22). | Shannon diversity index, describing how many land-cover classes are present and how evenly they are distributed. Steeper fields correlate with more diverse landscapes. The negative correlation with `prop_swf_within` may indicate that a high proportion of SWF causes one land-cover class to dominate, thereby reducing Shannon diversity. Treeage: no clear interpretation. Climate and soil correlations: no clear interpretation. |
+| `l_sidi` | NA | NA | Very similar in values and identical in direction to `l_shdi`; better to choose one of the two. |
+| `l_ed` | Correlates almost perfectly negatively with `l_ai` (-1.00), and negatively with area (-0.65), `temp_C_mean` (-0.62), `treeage` (-0.62), `fert_N` (-0.46), `sun_MJ_m2_mean` (-0.43), sand (-0.41), `l_contag` (-0.34), max slope (-0.32), and `AFage` (-0.23). | Strongly positively correlated with min slope (0.85), mean slope (0.68), precipitation (0.65), `l_shdi` (0.45), clay (0.43), `prop_swf_within` (0.36), and silt (0.33). | `ED` is an area/edge metric measuring total edge length between patches per unit area. Its perfect negative correlation with `l_ai` suggests that one of these metrics may need to be dropped. Steeper fields occur in landscapes with more edge, consistent with the `l_shdi`–slope relationship. Wetter/cooler climates also show more edge, although this may reflect a regional confound between climate and field location. Fertilization, soil texture, and field-design correlations: no clear interpretation. |
+| `l_ai` | NA | NA | Contains essentially the same information as `l_ed` but with reversed sign; better to choose one of the two. |
+| `distance_to_tree_strip` | No notable negative correlations. | Slight positive correlation with `AFage` (0.22). | Essentially uncorrelated with the other field-level landscape and environmental variables, which is a good sign because it does not appear strongly confounded with these predictors. |
+| `temp_C_mean` | Strongly negatively correlated with precipitation (-0.77), `l_ed` (-0.62), min slope (-0.48), clay (-0.46), mean slope (-0.44), silt (-0.39), `l_shdi` (-0.29), and `prop_swf_within` (-0.18). | Strongly positively correlated with `sun_MJ_m2_mean` (0.82), `l_ai` (0.61), sand (0.45), area (0.23), and `treeage` (0.22). | Warmer fields are generally sunnier and drier. Warmer sites also tend to be flatter, sandier, and located in more aggregated landscapes. The latter relationships have no clear interpretation. |
+| `sun_MJ_m2_mean` | Strongly negatively correlated with precipitation (-0.82), `l_ed` (-0.43), min slope (-0.34), mean slope (-0.29), `prop_swf_within` (-0.25), and `l_shdi` (-0.21). | Strongly positively correlated with `temp_C_mean` (0.82), `l_ai` (0.43), `AFage` (0.34), area (0.29), and `treeage` (0.20). | The precipitation–temperature/radiation relationships are expected: cloudy conditions tend to coincide with rainfall and reduced solar radiation. The correlation with `l_ed` is less clear. As with temperature, sunnier fields tend to occur in more aggregated landscapes. Most remaining correlations are below 0.30 and should be relatively weak. |
+| `precip_mm_sum` | Strongly negatively correlated with `sun_MJ_m2_mean` (-0.82), `temp_C_mean` (-0.77), `l_ai` (-0.65), area (-0.55), `treeage` (-0.40), and `l_contag` (-0.19). | Positively correlated with `l_ed` (0.65), min slope (0.55), mean slope (0.43), `prop_swf_within` (0.32), `l_shdi` (0.31), and clay (0.25). | Similar to the temperature and radiation patterns. However, precipitation shows overall stronger correlations with several landscape and field variables than the other climatic variables. |
+| `clay` | Strongly negatively correlated with sand (-0.90), `temp_C_mean` (-0.46), `l_ai` (-0.42), and `prop_swf` (-0.21). | Positively correlated with silt (0.72), mean slope (0.58), `AFage` (0.47), `l_ed` (0.43), min slope (0.42), `l_shdi` (0.32), `l_contag` (0.32), precipitation (0.25), and max slope (0.24). | The silt–clay–sand correlations are expected because these are co-dependent components of soil texture. The slope relationship may indicate that clay-rich soils are more common in non-flat areas, potentially because clay contributes to soil structural stability. |
+| `mean_slope` | Correlates negatively with `l_ai` (-0.66), sand (-0.64), area (-0.63), `treeage` (-0.52), `l_contag` (-0.49), `temp_C_mean` (-0.44), `sun_MJ_m2_mean` (-0.29), and `fert_N` (-0.18). | Very strongly correlated with min slope (0.89), `l_ed` (0.68), `l_shdi` (0.65), silt (0.60), clay (0.58), precipitation (0.43), max slope (0.37), `prop_swf` (0.20), and `prop_swf_within` (0.19). | As discussed for `l_shdi`, `l_ed`, and `temp_C_mean`, steeper fields are smaller, wetter/cooler, more clay/silt-rich, and occur in more fragmented landscapes. This suggests a coherent "steep upland field" cluster of correlated variables. |
+| `min_slope` | NA | NA | Very similar to mean slope; better to keep only one of these variables. |
+| `max_slope` | Correlates negatively with sand (-0.33), `l_ed` (-0.32), and `prop_swf_within` (-0.31). | Positively correlated with `l_shdi` (0.43), mean slope (0.37), `AFage` (0.37), `l_ai` (0.35), silt (0.35), `fert_N` (0.35), and clay (0.24). | Unlike mean and minimum slope, maximum slope appears to carry somewhat different information, most likely describing the steepest point within the field. |
+| `prop_swf_within` | Correlates negatively with `l_shdi` (-0.59), `AFage` (-0.46), area (-0.42), `l_ai` (-0.41), max slope (-0.31), `sun_MJ_m2_mean` (-0.25), `l_contag` (-0.22), and `temp_C_mean` (-0.18). | Positively correlated with `prop_swf` (0.36), `l_ed` (0.36), min slope (0.35), precipitation (0.32), and mean slope (0.19). | The correlation with `AFage` is particularly interesting, suggesting that older fields tend to have fewer small woody features within the field. This could be confounded by tree harvesting or management history, which may also explain the lack of a similar relationship with `treeage`. |
+| `fert_N` | Correlates negatively with `l_ed` (-0.46), min slope (-0.30), silt (-0.27), `prop_swf` (-0.19), and mean slope (-0.18). | Positively correlated with `l_ai` (0.45), max slope (0.35), `AFage` (0.25), and sand (0.23). | No clear interpretation. |
+| `treeage` | Correlates negatively with mean slope (-0.52), min slope (-0.70), `l_ed` (-0.62), `l_shdi` (-0.46), `l_sidi` (-0.50), precipitation (-0.40), and `prop_swf` (-0.18). | Strongly positively correlated with area (0.77), `l_ai` (0.62), `l_contag` (0.52), `AFage` (0.35), `temp_C_mean` (0.22), and `sun_MJ_m2_mean` (0.20). | Older tree strips are found on larger, flatter, less fragmented, warmer/drier fields. There is no clear causal interpretation. This most plausibly reflects which regions or field types were selected for earlier agroforestry establishment rather than an effect of tree age itself. |
+| `AFage` | Correlates negatively with `prop_swf_within` (-0.46), sand (-0.31), min slope (-0.29), `prop_swf` (-0.26), and `l_ed` (-0.23). | Positively correlated with `l_contag` (0.50), clay (0.47), area (0.42), max slope (0.37), `treeage` (0.35), `sun_MJ_m2_mean` (0.34), `l_ai` (0.25), `fert_N` (0.25), and `distance_to_tree_strip` (0.22). | The negative correlation with aggregation-related variables is interesting, although there is no clear interpretation. The soil-structure correlations are likely not causal, as `AFage` should not directly affect soil texture. |
+| `area` | Correlates negatively with min slope (-0.82), `l_ed` (-0.65), mean slope (-0.63), precipitation (-0.55), `prop_swf_within` (-0.42), `l_shdi` (-0.41), and `prop_swf` (-0.34). | Strongly positively correlated with `treeage` (0.77), `l_contag` (0.74), `l_ai` (0.65), `AFage` (0.42), `sun_MJ_m2_mean` (0.29), and `temp_C_mean` (0.23). | Potentially confounded with field characteristics, as there is only one value per field. |
+### Interpretation Summary 
+
+- Landcover metrics correlated highly with all other metrics included in the dataset. Different metrics to different degrees, but still. 
+- Area is a confounded metric as it seems continous and numeric, but it is bound directly to the field and does not differ from its name. It might have to be excluded as it is not an intrinsic para,eter it is the way the field is, and not the way it became due to some reasons.Also the graph below shows that we cannot see any relationship between area and yield. 
+- Only l_ed or l_ai should be left in the model.
+
+```{r treeage interpretation}
+ggplot(df, aes(x = field, y = treeage, fill = area)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(title = "Tree age by field", x = NULL) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(df, aes(x = field, y = yield_tha, fill = area)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(title = "Yield by field", x = NULL) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+## Relationships between yield and candidate predictors
+
+
+```{r relationships-swf, fig.width=6, fig.height=4}
+df |>
+  select(id, distance, prop_swf) |>
+  distinct() |>
+  ggplot(aes(x = distance, y = prop_swf)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "loess", se = FALSE) +
+  theme_bw() +
+  labs(title = "prop_swf as a function of distance from the field boundary")
+```
+
+
+```{r relationships - distance to tree strip}
+
+my.yield <- df |>
+  distinct(id, field, year, yield_tha, distance_to_tree_strip, crop_unified,
+           fert_N, treeage) |>
+  mutate(field = factor(field), crop_unified = factor(crop_unified), year = factor(year))
+
+xyplot(yield_tha ~ distance_to_tree_strip | field, groups = crop_unified,
+       data = my.yield, type = c("p", "r"), auto.key = TRUE)
+```
+
+# (4) Model Run 
+
+
+## Building the scalar (numerical) predictors dataset
+
+Based on the collinearity analysis above some variables were exluded. 
+Yield_th was scaled. 
+
+```{r build-predictors}
+predictors <- df |>
+  mutate(yield_scaled = scale(yield_tha)) |> 
+  distinct(id, field, year, yield_scaled, distance_to_tree_strip,
+           crop_unified, fert_N, temp_C_mean, sun_MJ_m2_mean,
+           precip_mm_sum, l_shdi, l_contag, l_ed, 
+           treeage, AFage, 
+           prop_swf_within, clay) |>
+  filter(id %in% id_order) |>
+  slice(match(id_order, id))
+
+stopifnot(nrow(predictors) == nrow(swf_mat))
+
+
+predictors$field         <- factor(predictors$field)
+predictors$crop_unified  <- factor(predictors$crop_unified)
+```
+
+## Adaptive basis dimensions
+
+`safe_k()` caps every smooth's basis dimension (`k`) at
+`(number of unique values - 1)` of its own covariate, so that
+`smooth.construct` can never fail regardless of how listwise deletion
+(NAs anywhere in the formula) thins the fitting sample.
+
+
+```{r safe-k}
+safe_k <- function(x, k_wanted) {
+  min(k_wanted, length(unique(x[!is.na(x)])) - 1)
+}
+
+k_dist  <- safe_k(predictors$distance_to_tree_strip, 6)
+k_fertN <- safe_k(predictors$fert_N,                 5)
+k_temp  <- safe_k(predictors$temp_C_mean,            5)
+k_sun   <- safe_k(predictors$sun_MJ_m2_mean,         5)
+k_prec  <- safe_k(predictors$precip_mm_sum,          5)
+k_shdi  <- safe_k(predictors$l_shdi,                 5)
+k_cont  <- safe_k(predictors$l_contag,               5)
+k_ed    <- safe_k(predictors$l_ed,                   5)
+k_afage    <- safe_k(predictors$AFage,                   5)
+k_tree  <- safe_k(predictors$treeage,                5)
+```
+
+```{r k-to-check}
+
+k_to_check <- list(
+  distance_to_tree_strip = k_dist,
+  fert_N                 = k_fertN,
+  temp_C_mean             = k_temp,
+  sun_MJ_m2_mean          = k_sun,
+  precip_mm_sum           = k_prec,
+  l_shdi                  = k_shdi,
+  l_contag                = k_cont,
+  l_ed                    = k_ed,
+  AFage                   = k_afage,
+  treeage                 = k_tree
+)
+
+for (nm in names(k_to_check)) {
+  k_val <- k_to_check[[nm]]
+  n_unique <- length(unique(predictors_fit[[nm]][!is.na(predictors_fit[[nm]])]))
+  cat(sprintf("%-25s k=%-3d unique=%-3d ", nm, k_val, n_unique))
+  res <- tryCatch({
+    smoothCon(s(x, k = k_val), data = data.frame(x = predictors_fit[[nm]]))
+    "OK"
+  }, error = function(e) paste("FAILS:", conditionMessage(e)))
+  cat(res, "\n")
+}
+```
+
+
+## Functional swf predictor 
+
+```{r function-swf}
+swf_long <- df |>
+  dplyr::select(id, field, distance, prop_swf) |>
+  unique()
+
+swf_wide <- swf_long |>
+  tidyr::pivot_wider(names_from = distance, values_from = prop_swf) |>
+  arrange(id)
+
+grid <- as.numeric(names(swf_wide)[-c(1, 2)])
+Y_swf <- as.matrix(swf_wide[, -c(1, 2)])
+field_id <- df |> distinct(id, field) |> arrange(id) |> pull(field)
+
+swf_model <- pffr(
+  Y_swf ~ s(field_id, bs = "re"),
+  yind = grid,
+  data = list(Y_swf = Y_swf, field_id = factor(field_id)),
+  family = binomial()
+)
+
+summary(swf_model)
+plot(swf_model)
+```
+
+## The model
+
+bs (optional): character string indicating the bs for the basis applied to the transformed coordinates; if empty, the appropriate defaults are used. 
+
+
+```{r model}
+fitted_swf <- fitted(swf_model)
+rownames(fitted_swf) <- swf_wide$id
+
+swf_fitted <- fitted_swf[match(id_order, rownames(fitted_swf)), ]
+
+predictors$swf_fitted <- swf_fitted
+
+model <- pfr(
+  yield_scaled ~
+    lf(swf_fitted, argvals = grid, bs = "ps", k = 15) +
+    s(distance_to_tree_strip, bs = "tp",k = k_dist) +
+    s(fert_N,         bs = "tp",k = k_fertN) +
+    s(temp_C_mean,    bs = "tp",k = k_temp) +
+    s(sun_MJ_m2_mean, bs = "tp",k = k_sun) +
+    s(precip_mm_sum,  bs = "tp",k = k_prec) +
+    s(l_shdi,         bs = "tp",k = k_shdi) +
+    s(l_contag,       bs = "tp",k = k_cont) +
+    s(l_ed,           bs = "tp",k = k_ed) +
+    s(AFage,          bs = "tp",k = k_afage) +
+    s(treeage,        bs = "tp",k = k_tree) +
+    crop_unified +
+    s(field, bs = "re"),
+  data   = predictors,
+  family = "gaussian",
+  method = "REML"
+)
+
+summary(model)
+summary(model)$r.sq
+summary(model)$dev.expl
+AIC(model)
+
+#gam.check(model)
+
+```
+
+
+
+
+
+
+
+
+
+```{r model2-swf_mat}
+
+model2 <- pfr(
+  yield_scaled ~
+    lf(swf_mat, argvals = grid, bs = "ps", k = 15) +
+    s(distance_to_tree_strip, bs = "tp",k = k_dist) +
+    s(fert_N,         bs = "tp",k = k_fertN) +
+    s(temp_C_mean,    bs = "tp",k = k_temp) +
+    s(sun_MJ_m2_mean, bs = "tp",k = k_sun) +
+    s(precip_mm_sum,  bs = "tp",k = k_prec) +
+    s(l_shdi,         bs = "tp",k = k_shdi) +
+    s(l_contag,       bs = "tp",k = k_cont) +
+    s(l_ed,           bs = "tp",k = k_ed) +
+    s(AFage,          bs = "tp",k = k_afage) +
+    s(treeage,        bs = "tp",k = k_tree) +
+    crop_unified +
+    s(field, bs = "re"),
+  data   = predictors,
+  family = "gaussian",
+  method = "REML"
+)
+
+
+```
+
+
+
+
+```{r model3-simple}
+model3 <- pfr(
+  yield_scaled ~
+    lf(swf_mat, argvals = grid, bs = "ps", k = 15) +
+    s(distance_to_tree_strip, bs = "tp",k = k_dist) +
+    crop_unified +
+    s(field, bs = "re"),
+  data   = predictors,
+  family = "gaussian",
+  method = "REML"
+)
+
+summary(model3)
+summary(model3)$r.sq
+summary(model3)$dev.expl
+AIC(model3)
+plot(model3)
+```
+
+
+
+```{r model4-af}
+model4 <- pfr(
+  yield_scaled ~
+    af(swf_mat, argvals = grid, Qtransform=TRUE, k=c(7,7)) +
+    s(distance_to_tree_strip, bs = "tp",k = k_dist) +
+    s(fert_N,         bs = "tp",k = k_fertN) +
+    s(temp_C_mean,    bs = "tp",k = k_temp) +
+    s(sun_MJ_m2_mean, bs = "tp",k = k_sun) +
+    s(precip_mm_sum,  bs = "tp",k = k_prec) +
+    s(l_shdi,         bs = "tp",k = k_shdi) +
+    s(l_contag,       bs = "tp",k = k_cont) +
+    s(l_ed,           bs = "tp",k = k_ed) +
+    s(AFage,          bs = "tp",k = k_afage) +
+    s(treeage,        bs = "tp",k = k_tree) +
+    crop_unified +
+    s(field, bs = "re"),
+  data   = predictors,
+  family = "gaussian",
+  method = "REML"
+)
+
+summary(model4)
+summary(model4)$r.sq
+summary(model4)$dev.expl
+AIC(model4)
+plot(model4)
+```
+
