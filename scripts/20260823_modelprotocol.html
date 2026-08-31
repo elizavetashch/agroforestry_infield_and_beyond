@@ -795,8 +795,6 @@ round(cor_mat, 2)</code></pre>
 ## treeage                     0.14           -0.04   0.13    1.00  0.35  0.77
 ## AFage                       0.37           -0.46   0.25    0.35  1.00  0.42
 ## area                        0.13           -0.42   0.12    0.77  0.42  1.00</code></pre>
-<div id="interpretation" class="section level3">
-<h3>Interpretation</h3>
 <table>
 <colgroup>
 <col width="25%" />
@@ -806,128 +804,283 @@ round(cor_mat, 2)</code></pre>
 </colgroup>
 <thead>
 <tr class="header">
-<th>Variable</th>
-<th>Negative Cor</th>
-<th>Positive Cor</th>
-<th>Interpretation</th>
+<th align="left">Variable</th>
+<th align="left">Negative Cor</th>
+<th align="left">Positive Cor</th>
+<th align="left">Interpretation</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>prop_swf</code></td>
-<td>correlates negatively with contagion index l_contag (-0.41),
-slightly negative with clay (-0.21), slightly negatively with all field
-design parameters fert_N (-0.19), treeage (-0.18), AFage (-0.26), area
-(-0.34).</td>
-<td></td>
-<td></td>
+<td align="left"><code>prop_swf</code></td>
+<td align="left">Correlates negatively with <code>l_contag</code>
+(-0.41), clay (-0.21), <code>fert_N</code> (-0.19), <code>treeage</code>
+(-0.18), <code>AFage</code> (-0.26), and area (-0.34).</td>
+<td align="left">Slightly positive correlation with mean slope (0.20),
+min slope (0.27), and <code>prop_swf_within</code> (0.36).</td>
+<td align="left"><code>CONTAG</code> is an aggregation metric based on
+cell adjacencies and describes the probability that two randomly
+selected cells belong to the same class. More small woody features may
+reduce landscape aggregation because they introduce small patches that
+disrupt the landscape. Clay: no interpretation. Slope: no clear
+interpretation. Field design: no clear interpretation.</td>
 </tr>
 <tr class="even">
-<td>slightly positive cor with mean slope (0.20), with min slope (0.27),
-with proportion of swf within the field (0.36).</td>
-<td>CONTAG is an ‘Aggregation metric’. It is based on cell adjacencies
-and describes the probability of two random cells belonging to the same
-class. The more small woody features the less aggregated the landscape
-is, probably because swf introduce little patches disrupting the
-landscape. Clay: no interpretation. Slope: no interpretation (maybe
-trees enjoy it on slopes but that’s an uneducated guess). Field design:
-no interpretation.</td>
-<td><code>l_contag</code></td>
-<td>correlates negatively with min slope (-0.54), mean slope (-0.49),
-prop_swf (-0.41), l_shdi (-0.39), l_sidi (-0.53) edge density l_ed
-(-0.34), prop_swf_within (-0.22), sand (-0.20), precip_mm_sum
+<td align="left"><code>l_contag</code></td>
+<td align="left">Correlates negatively with min slope (-0.54), mean
+slope (-0.49), <code>prop_swf</code> (-0.41), <code>l_shdi</code>
+(-0.39), <code>l_sidi</code> (-0.53), <code>l_ed</code> (-0.34),
+<code>prop_swf_within</code> (-0.22), sand (-0.20), and precipitation
 (-0.19).</td>
+<td align="left">Strongly positively correlated with area (0.74),
+<code>treeage</code> (0.52), <code>AFage</code> (0.50),
+<code>l_ai</code> (0.34), and clay (0.32).</td>
+<td align="left">Landscape metrics were calculated within a 3000 m
+buffer including the field. Large fields may create larger class areas,
+increasing the contagion index. The negative correlation with Shannon
+and Simpson diversity is expected because these metrics capture
+different aspects of landscape structure.</td>
 </tr>
 <tr class="odd">
-<td>correlates strongly positively with area (0.74), treeage (0.52),
-AFage (0.50), aggregation index l_ai (0.34), clay (0.32).</td>
-<td>Landscape metrics were calculated within 3000m buffer including the
-field, meaning large fields build large class areas increasing the
-contagency index. Negative correlation with shannon and simpson due to
-the opposite nature of the metrics.</td>
-<td><code>l_np</code></td>
-<td></td>
+<td align="left"><code>l_np</code></td>
+<td align="left">Correlates negatively with <code>l_ai</code> (-0.75),
+<code>temp_C_mean</code> (-0.56), solar radiation (-0.37), sand (-0.36),
+max slope (-0.31), <code>fert_N</code> (-0.30), and <code>treeage</code>
+(-0.29).</td>
+<td align="left">Positively correlated with <code>l_shdi</code>,
+<code>l_ed</code> (0.76), precipitation (0.49), clay (0.39), silt
+(0.32), mean slope (0.32), and min slope (0.45).</td>
+<td align="left">Number of patches within the 3000 m buffer. Wetter,
+cooler, and flatter fields tend to have more land-cover patches.</td>
 </tr>
 <tr class="even">
-<td>negative correlation with l_ai (-0.75), with temp_C_mean (-0.56),
-sun radiation (-0.37), sand (-0.36), max slope (-0.31), fertilization
-(-0.30), treeage (-0.29)</td>
-<td></td>
-<td></td>
-<td></td>
+<td align="left"><code>l_shdi</code></td>
+<td align="left">Correlates negatively with <code>prop_swf_within</code>
+(-0.59), <code>treeage</code> (-0.46), <code>l_ai</code> (-0.41), area
+(-0.41), <code>l_contag</code> (-0.39), <code>temp_C_mean</code>
+(-0.29), sand (-0.28), and <code>sun_MJ_m2_mean</code> (-0.21).</td>
+<td align="left">Positively correlated with mean slope (0.65), min slope
+(0.58), <code>l_ed</code> (0.45), max slope (0.43), clay (0.32),
+precipitation (0.31), and silt (0.22).</td>
+<td align="left">Shannon diversity index, describing how many land-cover
+classes are present and how evenly they are distributed. Steeper fields
+correlate with more diverse landscapes. The negative correlation with
+<code>prop_swf_within</code> may indicate that a high proportion of SWF
+causes one land-cover class to dominate, thereby reducing Shannon
+diversity. Treeage: no clear interpretation. Climate and soil
+correlations: no clear interpretation.</td>
 </tr>
 <tr class="odd">
-<td>positive correlation with l_shdi, l_ed (0.76), precipitation (0.49),
-clay (0.39), silt (0.32), mean slope (0.32), min slope (0.45)</td>
-<td>number of patches in the 3000m buffer. Wetter/cooler and flatter
-fields tend to have more landcover class patches.</td>
-<td><code>l_shdi</code></td>
-<td>correlates negatively with prop_swf_within (-0.59), treeage (-0.46),
-aggregation index l_ai (-0.41) and area (-0.41), l_contag (-0.39),
-temp_C_mean (-0.29), sand (-0.28), sun_MJ_m2_mean (-0.21).</td>
+<td align="left"><code>l_sidi</code></td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Very similar in values and identical in direction to
+<code>l_shdi</code>; better to choose one of the two.</td>
 </tr>
 <tr class="even">
-<td>correlates positively with mean slope (0.65), min slope (0.58), edge
-density l_ed (0.45), max slope (0.43), clay (0.32), precip_mm_sum
-(0.31), silt (0.22).</td>
-<td></td>
-<td></td>
-<td></td>
+<td align="left"><code>l_ed</code></td>
+<td align="left">Correlates almost perfectly negatively with
+<code>l_ai</code> (-1.00), and negatively with area (-0.65),
+<code>temp_C_mean</code> (-0.62), <code>treeage</code> (-0.62),
+<code>fert_N</code> (-0.46), <code>sun_MJ_m2_mean</code> (-0.43), sand
+(-0.41), <code>l_contag</code> (-0.34), max slope (-0.32), and
+<code>AFage</code> (-0.23).</td>
+<td align="left">Strongly positively correlated with min slope (0.85),
+mean slope (0.68), precipitation (0.65), <code>l_shdi</code> (0.45),
+clay (0.43), <code>prop_swf_within</code> (0.36), and silt (0.33).</td>
+<td align="left"><code>ED</code> is an area/edge metric measuring total
+edge length between patches per unit area. Its perfect negative
+correlation with <code>l_ai</code> suggests that one of these metrics
+may need to be dropped. Steeper fields occur in landscapes with more
+edge, consistent with the <code>l_shdi</code>–slope relationship.
+Wetter/cooler climates also show more edge, although this may reflect a
+regional confound between climate and field location. Fertilization,
+soil texture, and field-design correlations: no clear
+interpretation.</td>
 </tr>
 <tr class="odd">
-<td>Shannon diversity index, i.e. how many land-cover classes are
-present and how evenly they are distributed. Steeper fields correlate
-with more diverse landscapes. Prop_swf_within gives negative
-correlation, the more swf in the field the lower the shannons index -
-might be because one class is prevaling in the field and hence reduces
-the shannons index, Treeage: no interpretation. Climate/soil
-correlations: no interpretation.</td>
-<td><code>l_sidi</code></td>
-<td>NA</td>
-<td>NA</td>
+<td align="left"><code>l_ai</code></td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Contains essentially the same information as
+<code>l_ed</code> but with reversed sign; better to choose one of the
+two.</td>
 </tr>
 <tr class="even">
-<td>no</td>
-<td>slight positive with AFage (0.22).</td>
-<td>uncorrelated with everything , so not confounded with any of the
-field-level landscape or environmental variables, good sign.</td>
-<td><code>temp_C_mean</code></td>
+<td align="left"><code>distance_to_tree_strip</code></td>
+<td align="left">No notable negative correlations.</td>
+<td align="left">Slight positive correlation with <code>AFage</code>
+(0.22).</td>
+<td align="left">Essentially uncorrelated with the other field-level
+landscape and environmental variables, which is a good sign because it
+does not appear strongly confounded with these predictors.</td>
 </tr>
 <tr class="odd">
-<td>correlates negatively with l_shdi (-0.59), AFage (-0.46), area
-(-0.42), l_ai (-0.41), max slope (-0.31), sun_MJ_m2_mean (-0.25),
-l_contag (-0.22), temp_C_mean (-0.18).</td>
-<td>correlates positively with prop_swf (0.36), l_ed (0.36), min slope
-(0.35), precip_mm_sum (0.32), mean slope (0.19).</td>
-<td>Most interesting is the correlation with AFage, as it implicates
-that older fields tend to have less small woody feateres on the field
-than younger ones. That might be confounded as sometimes trees are
-harvested, hence we see no correlation with treeage.</td>
-<td><code>fert_N</code></td>
+<td align="left"><code>temp_C_mean</code></td>
+<td align="left">Strongly negatively correlated with precipitation
+(-0.77), <code>l_ed</code> (-0.62), min slope (-0.48), clay (-0.46),
+mean slope (-0.44), silt (-0.39), <code>l_shdi</code> (-0.29), and
+<code>prop_swf_within</code> (-0.18).</td>
+<td align="left">Strongly positively correlated with
+<code>sun_MJ_m2_mean</code> (0.82), <code>l_ai</code> (0.61), sand
+(0.45), area (0.23), and <code>treeage</code> (0.22).</td>
+<td align="left">Warmer fields are generally sunnier and drier. Warmer
+sites also tend to be flatter, sandier, and located in more aggregated
+landscapes. The latter relationships have no clear interpretation.</td>
 </tr>
 <tr class="even">
-<td>correlates positively with l_contag (0.50), clay (0.47), area
-(0.42), max slope (0.37), treeage (0.35), sun_MJ_m2_mean (0.34), l_ai
-(0.25), fert_N (0.25), distance_to_tree_strip (0.22).</td>
-<td>Negative correlation with aggregation is interesting, though no
-interpretation. Soil structure: I think those are mostly random as the
-AFage shpuld have no effect on soil structure.</td>
-<td><code>area</code></td>
-<td>correlates negatively with min slope (-0.82), l_ed (-0.65), mean
-slope (-0.63), precip_mm_sum (-0.55), prop_swf_within (-0.42), l_shdi
-(-0.41), prop_swf (-0.34).</td>
+<td align="left"><code>sun_MJ_m2_mean</code></td>
+<td align="left">Strongly negatively correlated with precipitation
+(-0.82), <code>l_ed</code> (-0.43), min slope (-0.34), mean slope
+(-0.29), <code>prop_swf_within</code> (-0.25), and <code>l_shdi</code>
+(-0.21).</td>
+<td align="left">Strongly positively correlated with
+<code>temp_C_mean</code> (0.82), <code>l_ai</code> (0.43),
+<code>AFage</code> (0.34), area (0.29), and <code>treeage</code>
+(0.20).</td>
+<td align="left">The precipitation–temperature/radiation relationships
+are expected: cloudy conditions tend to coincide with rainfall and
+reduced solar radiation. The correlation with <code>l_ed</code> is less
+clear. As with temperature, sunnier fields tend to occur in more
+aggregated landscapes. Most remaining correlations are below 0.30 and
+should be relatively weak.</td>
 </tr>
 <tr class="odd">
-<td>correlates strongly positively with treeage (0.77), l_contag (0.74),
-l_ai (0.65), AFage (0.42), sun_MJ_m2_mean (0.29), temp_C_mean
+<td align="left"><code>precip_mm_sum</code></td>
+<td align="left">Strongly negatively correlated with
+<code>sun_MJ_m2_mean</code> (-0.82), <code>temp_C_mean</code> (-0.77),
+<code>l_ai</code> (-0.65), area (-0.55), <code>treeage</code> (-0.40),
+and <code>l_contag</code> (-0.19).</td>
+<td align="left">Positively correlated with <code>l_ed</code> (0.65),
+min slope (0.55), mean slope (0.43), <code>prop_swf_within</code>
+(0.32), <code>l_shdi</code> (0.31), and clay (0.25).</td>
+<td align="left">Similar to the temperature and radiation patterns.
+However, precipitation shows overall stronger correlations with several
+landscape and field variables than the other climatic variables.</td>
+</tr>
+<tr class="even">
+<td align="left"><code>clay</code></td>
+<td align="left">Strongly negatively correlated with sand (-0.90),
+<code>temp_C_mean</code> (-0.46), <code>l_ai</code> (-0.42), and
+<code>prop_swf</code> (-0.21).</td>
+<td align="left">Positively correlated with silt (0.72), mean slope
+(0.58), <code>AFage</code> (0.47), <code>l_ed</code> (0.43), min slope
+(0.42), <code>l_shdi</code> (0.32), <code>l_contag</code> (0.32),
+precipitation (0.25), and max slope (0.24).</td>
+<td align="left">The silt–clay–sand correlations are expected because
+these are co-dependent components of soil texture. The slope
+relationship may indicate that clay-rich soils are more common in
+non-flat areas, potentially because clay contributes to soil structural
+stability.</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>mean_slope</code></td>
+<td align="left">Correlates negatively with <code>l_ai</code> (-0.66),
+sand (-0.64), area (-0.63), <code>treeage</code> (-0.52),
+<code>l_contag</code> (-0.49), <code>temp_C_mean</code> (-0.44),
+<code>sun_MJ_m2_mean</code> (-0.29), and <code>fert_N</code>
+(-0.18).</td>
+<td align="left">Very strongly correlated with min slope (0.89),
+<code>l_ed</code> (0.68), <code>l_shdi</code> (0.65), silt (0.60), clay
+(0.58), precipitation (0.43), max slope (0.37), <code>prop_swf</code>
+(0.20), and <code>prop_swf_within</code> (0.19).</td>
+<td align="left">As discussed for <code>l_shdi</code>,
+<code>l_ed</code>, and <code>temp_C_mean</code>, steeper fields are
+smaller, wetter/cooler, more clay/silt-rich, and occur in more
+fragmented landscapes. This suggests a coherent “steep upland field”
+cluster of correlated variables.</td>
+</tr>
+<tr class="even">
+<td align="left"><code>min_slope</code></td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">Very similar to mean slope; better to keep only one of
+these variables.</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>max_slope</code></td>
+<td align="left">Correlates negatively with sand (-0.33),
+<code>l_ed</code> (-0.32), and <code>prop_swf_within</code>
+(-0.31).</td>
+<td align="left">Positively correlated with <code>l_shdi</code> (0.43),
+mean slope (0.37), <code>AFage</code> (0.37), <code>l_ai</code> (0.35),
+silt (0.35), <code>fert_N</code> (0.35), and clay (0.24).</td>
+<td align="left">Unlike mean and minimum slope, maximum slope appears to
+carry somewhat different information, most likely describing the
+steepest point within the field.</td>
+</tr>
+<tr class="even">
+<td align="left"><code>prop_swf_within</code></td>
+<td align="left">Correlates negatively with <code>l_shdi</code> (-0.59),
+<code>AFage</code> (-0.46), area (-0.42), <code>l_ai</code> (-0.41), max
+slope (-0.31), <code>sun_MJ_m2_mean</code> (-0.25),
+<code>l_contag</code> (-0.22), and <code>temp_C_mean</code>
+(-0.18).</td>
+<td align="left">Positively correlated with <code>prop_swf</code>
+(0.36), <code>l_ed</code> (0.36), min slope (0.35), precipitation
+(0.32), and mean slope (0.19).</td>
+<td align="left">The correlation with <code>AFage</code> is particularly
+interesting, suggesting that older fields tend to have fewer small woody
+features within the field. This could be confounded by tree harvesting
+or management history, which may also explain the lack of a similar
+relationship with <code>treeage</code>.</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>fert_N</code></td>
+<td align="left">Correlates negatively with <code>l_ed</code> (-0.46),
+min slope (-0.30), silt (-0.27), <code>prop_swf</code> (-0.19), and mean
+slope (-0.18).</td>
+<td align="left">Positively correlated with <code>l_ai</code> (0.45),
+max slope (0.35), <code>AFage</code> (0.25), and sand (0.23).</td>
+<td align="left">No clear interpretation.</td>
+</tr>
+<tr class="even">
+<td align="left"><code>treeage</code></td>
+<td align="left">Correlates negatively with mean slope (-0.52), min
+slope (-0.70), <code>l_ed</code> (-0.62), <code>l_shdi</code> (-0.46),
+<code>l_sidi</code> (-0.50), precipitation (-0.40), and
+<code>prop_swf</code> (-0.18).</td>
+<td align="left">Strongly positively correlated with area (0.77),
+<code>l_ai</code> (0.62), <code>l_contag</code> (0.52),
+<code>AFage</code> (0.35), <code>temp_C_mean</code> (0.22), and
+<code>sun_MJ_m2_mean</code> (0.20).</td>
+<td align="left">Older tree strips are found on larger, flatter, less
+fragmented, warmer/drier fields. There is no clear causal
+interpretation. This most plausibly reflects which regions or field
+types were selected for earlier agroforestry establishment rather than
+an effect of tree age itself.</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>AFage</code></td>
+<td align="left">Correlates negatively with <code>prop_swf_within</code>
+(-0.46), sand (-0.31), min slope (-0.29), <code>prop_swf</code> (-0.26),
+and <code>l_ed</code> (-0.23).</td>
+<td align="left">Positively correlated with <code>l_contag</code>
+(0.50), clay (0.47), area (0.42), max slope (0.37), <code>treeage</code>
+(0.35), <code>sun_MJ_m2_mean</code> (0.34), <code>l_ai</code> (0.25),
+<code>fert_N</code> (0.25), and <code>distance_to_tree_strip</code>
+(0.22).</td>
+<td align="left">The negative correlation with aggregation-related
+variables is interesting, although there is no clear interpretation. The
+soil-structure correlations are likely not causal, as <code>AFage</code>
+should not directly affect soil texture.</td>
+</tr>
+<tr class="even">
+<td align="left"><code>area</code></td>
+<td align="left">Correlates negatively with min slope (-0.82),
+<code>l_ed</code> (-0.65), mean slope (-0.63), precipitation (-0.55),
+<code>prop_swf_within</code> (-0.42), <code>l_shdi</code> (-0.41), and
+<code>prop_swf</code> (-0.34).</td>
+<td align="left">Strongly positively correlated with
+<code>treeage</code> (0.77), <code>l_contag</code> (0.74),
+<code>l_ai</code> (0.65), <code>AFage</code> (0.42),
+<code>sun_MJ_m2_mean</code> (0.29), and <code>temp_C_mean</code>
 (0.23).</td>
-<td>confounded with field itself as only one value per field</td>
-<td></td>
-<td></td>
+<td align="left">Potentially confounded with field characteristics, as
+there is only one value per field.</td>
 </tr>
 </tbody>
 </table>
-</div>
 <div id="interpretation-summary" class="section level3">
 <h3>Interpretation Summary</h3>
 <ul>
@@ -974,6 +1127,531 @@ yield.</li>
 xyplot(yield_tha ~ distance_to_tree_strip | field, groups = crop_unified,
        data = my.yield, type = c(&quot;p&quot;, &quot;r&quot;), auto.key = TRUE)</code></pre>
 <p><img role="img" aria-label src="data:image/png;base64,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" alt width="672" /></p>
+</div>
+</div>
+<div id="model-run" class="section level1">
+<h1>(4) Model Run</h1>
+<div id="building-the-scalar-numerical-predictors-dataset" class="section level2">
+<h2>Building the scalar (numerical) predictors dataset</h2>
+<p>Based on the collinearity analysis above some variables were exluded.
+Yield_th was scaled.</p>
+<pre class="r"><code>predictors &lt;- df |&gt;
+  mutate(yield_scaled = scale(yield_tha)) |&gt; 
+  distinct(id, field, year, yield_scaled, distance_to_tree_strip,
+           crop_unified, fert_N, temp_C_mean, sun_MJ_m2_mean,
+           precip_mm_sum, l_shdi, l_contag, l_ed, 
+           treeage, AFage, 
+           prop_swf_within, clay, latitude, longitude) |&gt;
+  filter(id %in% id_order) |&gt;
+  slice(match(id_order, id))
+
+stopifnot(nrow(predictors) == nrow(swf_mat))
+
+
+predictors$field         &lt;- factor(predictors$field)
+predictors$crop_unified  &lt;- factor(predictors$crop_unified)</code></pre>
+</div>
+<div id="adaptive-basis-dimensions" class="section level2">
+<h2>Adaptive basis dimensions</h2>
+<p><code>safe_k()</code> caps every smooth’s basis dimension
+(<code>k</code>) at <code>(number of unique values - 1)</code> of its
+own covariate, so that <code>smooth.construct</code> can never fail
+regardless of how listwise deletion (NAs anywhere in the formula) thins
+the fitting sample.</p>
+<pre class="r"><code>safe_k &lt;- function(x, k_wanted) {
+  min(k_wanted, length(unique(x[!is.na(x)])) - 1)
+}
+
+k_dist  &lt;- safe_k(predictors$distance_to_tree_strip, 6)
+k_fertN &lt;- safe_k(predictors$fert_N,                 5)
+k_temp  &lt;- safe_k(predictors$temp_C_mean,            5)
+k_sun   &lt;- safe_k(predictors$sun_MJ_m2_mean,         5)
+k_prec  &lt;- safe_k(predictors$precip_mm_sum,          5)
+k_shdi  &lt;- safe_k(predictors$l_shdi,                 5)
+k_cont  &lt;- safe_k(predictors$l_contag,               5)
+k_ed    &lt;- safe_k(predictors$l_ed,                   5)
+k_afage    &lt;- safe_k(predictors$AFage,                   5)
+k_tree  &lt;- safe_k(predictors$treeage,                5)</code></pre>
+<pre class="r"><code>k_to_check &lt;- list(
+  distance_to_tree_strip = k_dist,
+  fert_N                 = k_fertN,
+  temp_C_mean             = k_temp,
+  sun_MJ_m2_mean          = k_sun,
+  precip_mm_sum           = k_prec,
+  l_shdi                  = k_shdi,
+  l_contag                = k_cont,
+  l_ed                    = k_ed,
+  AFage                   = k_afage,
+  treeage                 = k_tree
+)
+
+for (nm in names(k_to_check)) {
+  k_val &lt;- k_to_check[[nm]]
+  n_unique &lt;- length(unique(predictors[[nm]][!is.na(predictors[[nm]])]))
+  cat(sprintf(&quot;%-25s k=%-3d unique=%-3d &quot;, nm, k_val, n_unique))
+  res &lt;- tryCatch({
+    smoothCon(s(x, k = k_val), data = data.frame(x = predictors[[nm]]))
+    &quot;OK&quot;
+  }, error = function(e) paste(&quot;FAILS:&quot;, conditionMessage(e)))
+  cat(res, &quot;\n&quot;)
+}</code></pre>
+<pre><code>## distance_to_tree_strip    k=6   unique=8   OK 
+## fert_N                    k=5   unique=24  FAILS: NA/NaN/Inf in foreign function call (arg 1) 
+## temp_C_mean               k=5   unique=34  OK 
+## sun_MJ_m2_mean            k=5   unique=34  OK 
+## precip_mm_sum             k=5   unique=34  OK 
+## l_shdi                    k=5   unique=30  OK 
+## l_contag                  k=5   unique=30  OK 
+## l_ed                      k=5   unique=30  OK 
+## AFage                     k=5   unique=17  OK 
+## treeage                   k=5   unique=10  OK</code></pre>
+</div>
+<div id="functional-swf-predictor" class="section level2">
+<h2>Functional swf predictor</h2>
+<pre class="r"><code>swf_long &lt;- df |&gt;
+  dplyr::select(id, field, distance, prop_swf) |&gt;
+  unique()
+
+swf_wide &lt;- swf_long |&gt;
+  tidyr::pivot_wider(names_from = distance, values_from = prop_swf) |&gt;
+  arrange(id)
+
+grid &lt;- as.numeric(names(swf_wide)[-c(1, 2)])
+Y_swf &lt;- as.matrix(swf_wide[, -c(1, 2)])
+field_id &lt;- df |&gt; distinct(id, field) |&gt; arrange(id) |&gt; pull(field)
+
+swf_model &lt;- pffr(
+  Y_swf ~ s(field_id, bs = &quot;re&quot;),
+  yind = grid,
+  data = list(Y_swf = Y_swf, field_id = factor(field_id)),
+  family = binomial()
+)
+
+summary(swf_model)</code></pre>
+<pre><code>## 
+## Family: binomial 
+## Link function: logit 
+## 
+## Formula:
+## Y_swf ~ s(field_id, bs = &quot;re&quot;)
+## 
+## Constant coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  -3.1107     0.1226  -25.36   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Smooth terms &amp; functional coefficients:
+##                          edf Ref.df Chi.sq p-value    
+## Intercept(yindex)  9.312e-04      9    0.0  &lt;2e-16 ***
+## s(field_id,yindex) 1.814e+01     18  123.6  &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## R-sq.(adj) =  0.564   Deviance explained = 52.6%
+## -REML score = 630.95  Scale est. = 1         n = 11710 (1171 x 10)
+## Sandwich correction (cluster) applied to covariance matrices.</code></pre>
+<pre class="r"><code>plot(swf_model)</code></pre>
+<p><img role="img" aria-label src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABUAAAAPACAMAAADDuCPrAAAA5FBMVEUAAAAAADoAAGYAOjoAOmYAOpAAZmYAZrY6AAA6OgA6Ojo6OmY6ZmY6ZpA6ZrY6kJA6kLY6kNtmAABmADpmOgBmOjpmOmZmZjpmZmZmZpBmkLZmkNtmtttmtv+QOgCQZgCQZjqQZmaQkDqQkGaQkJCQkLaQtraQttuQ29uQ2/+2ZgC2Zjq2kDq2kGa2kJC2kLa2tma2tpC2tra2ttu225C227a229u22/+2///bkDrbkGbbkJDbtmbbtpDbtrbbttvb27bb29vb2//b/7bb////tmb/25D/27b/29v//7b//9v///+5jbM+AAAACXBIWXMAAB2HAAAdhwGP5fFlAAAgAElEQVR4nO3dbWMTWZqYYanbBDcMvQsLu24WCJvsQNo0SdqdhfEEWNzBGKT//3+i0mtJMkb16KiqTtV1fRhsTVv2saTb9XLqaDAGIGTQ9A8AkCsBBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAoHYHdACQTPpEJb/HhJr+bQPdkrxRqe8wpQP8wQB6S0ABggQUIEhAAYIEFCBIQAGCBBQgSEABggQUIEhAAYIEFCBIQAGCBBQgSEABggQUIEhAAYIEFCAo24B++XD25lPlrxJQIJ3MAvrx0Q9/m/wzen08XU3/6GXFrxdQIJ2sAjp6PhgUAR09W74hyc/VtkIFFEgnp4BOuzkJ6PTf4cnJSbEZervSXQgokE5OAb2c9PIfP83+vV/cMPptEtJfq9zF7sM9wNvtAR2TU0BP5908XW13nlbcBK0UUAkFbpRRQL8+mG1uLv4tfD4e3KpyFLTKcCUUuFleAZ2egl/8O974eBfVhiuhwE0yDOjoWV0BdSQUuElGAS1Ovj8tPjhd7cJfDg63Cw/0TdWdzowCOj6fzQItDnzOzxwVTb1f5S4EFPiWQeWjdjkFdLK/Pjh6O56WdDaN6dXhpjFtf6X2QodVr+c4r4COL4uZ83dfXFz8Ninp49+fHw8qboDuF1ANhe4KvcCzCmix876hWj/3Gu5AQ4E1eQV0uYrIXN2LiQgoUJJZQCe+/H7y6M7E3V9eWM4O2Mue20T5BXQvAgos7H9UTkCjd6TFkLUUJzUyDOjo4sPZ2dkfF9V34BMHVEIhYylewbkF9OPz0jmke2+qfnnK4Woo9F1eAb16uDGL6ajSNPrUwxVQ6LesAjqdSD+4czLzU/HJ8GmlexA86LXEWz05BbS4lHNYnvn5/nhQbTEmAYU+S37cLaeAnm/lskhqOxYTsTMPLXeIsxYZBXS5nF1Ja5azc0YJWu4QL9GMAnrd4smHXlC50l1rKPSMgCYkoNAvGQV0sgu/tfhna3bhgVY67FZNRgEt3sN4o5bFYdEDva0xkL2DH1fLKaDFaqC33pZuuHpW34r01diZh8bVcFoip4AW85gmxTx5cVb4fTaTvq4V6atxQgkaV8NrMKuAjt9trkg/fFLtDmqMmoZC5+UV0I0V6YePq67IVGvRBBQ6LrOATow+nr0+OTl5fPYmsJ6dokG31bvdkl9A9yKg0GG1X84ioEA3NHDeIcOAtmJF+srfV7nhwBp4meUW0BatSF/t+zqjBN2TV0Arrkg/uMYBf7obWWsEuiergFZdkb5NAR2b1gSH0OjLKqeAWpEeWNP0ZlFOAW3zivRA7ZrOZ1YBbfWK9NU0/ahDJzT/OsoooO1fUHlnzf/hBBIQ0IZoKOQvo4B2bUV6AYWAVr1wMgqoFemh75qfjbgup4BmtCI9kF7L6jnOK6AZrUhfUfueF9BC7XuVZBXQrFakr6IN10kBleUV0LxWpK9IQCE3mQV0bEV66JV275rlF9C9tPiRADa1/tiWgLZQq58xUJ/WvxQEtIVa/kcXmBPQdtJQyEDmAc33WvjvElB6KqenvoAC7dH2s0YbBBRoi7zqOc4+oOMvF39W+c+zemyW8npKQVh2T/XcA1pRbg/PTHZ/lqEnBDQLmR0Ygp4Q0FwIKF2V8VM7w4COLj6cnZ39cRG4FD7ngEIn5b1zlVtAPz4vrcZ0703VL8/3gYIuyjufuQX06uHGeqBHldaj70hA837GQUnuz+WsAno5XQz0zsnMdEH64eY7xd8s80drJvc/2tAZOQX064NJMF+Wbng/CWqlefTdCOhYQ8lah568OQX0fCuXRVIrvSlSZx63Lj0H6ZVuTcnLKKDFexhv7rDn/L7w0D+dquc4q4Bed927a+EhJ52q51hAu6Brf9QhGxkFdLILP9yctWQXfuxNkaExGQV0fLpVy+Kw6O0qd9HdyAgobdXlv+45BfTz8aSgb0s3XE36ubVReqPOPo7QTh3fPcopoMU8pkkxT16cFX6fzaSvNItJQKFeHY5nIauAjt8db1zKOXxS7Q46/VjOdfnvPbRLXgEdj16XEzp8XHVFpj6UxTklqEtmAZ0YfTx7fXJy8vjsTWA9u75URUBpUn+efvkFdC99eVihMb3aARJQIJ0+1XMsoD3Qp6czjevZ001AO69nmwRQIwHtgV4dlKIJvX16CWg/CCgH0+e/zwIK7KHP+RRQYC89rudYQPun19sLkJaA9o0rPdmfJ9CcgPaRgLIHf4FXBBSoQD3LBBSoQD3LBLTvbFBAmID2nZNKfJcnyLcIKGMnVbmBv7A3EFDgJuJ5AwFljVcL7E5AWWNvDXYnoGzSUOyJ7EhA2ebV02/OGu1MQIEy9axAQIEy9axAQLmRzRH4NgHlRi5U6gUPcZCA8n1eXZ3mb2ScgELPiWecgFKFLRUoEVCqcEi0EzyIqQgoVXntZc5fwXQEFHpGOtMRUPbhtUivCSj7sCuYCY/TYQgo+3E4rf0c8zwYAWVvXpst5wE6GAEFCBJQErKj2B4eijoIKAmZYdgSHoaaCCiJeeU2Tj1rI6DQNepZGwHlgGwK0W2dDujgGk3/TP3i114Pv+amCCiH5td+cJ7dTel0QLd5igHpCCj1sR+Qil9kSwgo9RHQRPwi20JAAYIElObYiqrA76qNBJTm2BPdlV9USwkoDdOFHfgltZSAAgQJKK1hj37FryIPAkprCOiSX0UmBBQgSEBprT5thvVoqJ0ioLSWgNJ2AkouutXTTg2mvwSUXHQqoJ0aTI8JKLnKK0CC2UkCSq7y2ojL6odlVwJK1jSJJgkoHdG2DdKW/TgchIDSEZsBrTuoDX97GiGgdNS3gpr6/r/x7egFAaUf9t1AbXoDl1YSUPrpu0EUTL5PQKFgC5MAAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIyiygo9eP7vzlr5+Wn399MPjhbxW+XkCBdPIK6N+Pp2/zNXy8SKiAAs3JKqDny3dKvDUvqIACzckpoJ8n259HLy8uXhf/zrIpoEBzcgro+WLL8+rhoqACCjQno4COng0GT1cfTlsqoEBzMgpoOZZFQW+PBRRoUqYBLT4Z3BdQoEm5BrQ4ozT8VUCBBmUU0NIx0MLlYPDDWwEFmpNRQIuz8LfXP/3hPwQUaExOAS3mgd77c/X5q+mcegEFGpJTQKdXIpV7+UpAgQbVFtDRx7PCm73u+93xei8nnwso0JR6Anr1/Hh5Gfvw8Z/X/Bc7Gr3/5dPa56+OBRRoSB0Bff9wsO7oZepvuisBBdI5fEBn+RzePXkx2YP//eTRLKH77cqHCSiQzqEDOipO9Bz9tbzf/eX1T5Pbfv40DhpdfJik+I+LyB0IKJDOgQP6ebL5+fP2Mc+r54PiOqKAj89LhwLuVd6OFVAgncMG9OuDwb231/5Xk4RWOvsz/6qto6kVKyygQDoHDug/f/t00dU/Vw7o5fRc/p2TmZ+mx1affv/Lyj+cgALJ5DSRvliBaVgu8vuq00AFFEgop4Ceb+Vyvqjd7gQUSCejgG6sxjR1uXp/uZ0IKJBOPQHdZ+bR0nVL11nODmhODQHdc+bRkoAC7XLwgO4982hpsgu/NXfULjzQnEMHdP+ZRyunW7VcvLfc7j+cgALJHDigCWYerRQLKt8qz8u/elb1giYBBdI5cEATzDxav7dJMaerkhTrkky3Z6vdl4AC6Rw2oClmHpW9O944oDp8UvGHE1AgmYNfC7/3ifM1o9flhA4fVy2xgALpZBbQ8fS9QV6fnJw8PnsT2I4VUCCdg+/C7z3zKCkBBdI58EmkBDOPkhJQIJ1DL6i8/8yjLVakB9rh0BPp9595tM6K9EBrHPxSzr1nHpVVvC50cI34NwdYd/jFRPadeVRS9bpQAQUOqZbl7PaaebRiRXqgVTJaUNmK9EC7ZBRQK9ID7ZJRQC2oDLSLgAIE1R/Q4rjlYHD37Xf+s21WpAfapZGADv/yL8dbhzO/z4r0QKs0EtDJXvfot+oriliRHmiVBo6Bfrn4M3jXVqQH2iSjk0hjK9IDrZJXQK1ID7RIZgEdW5EeaI3aAjr6z6J3X//5r42tRl8QUCCdmgJ69Wg24b2Yw/Svqb9jBQIKpFNPQC8XyyZNZ9Hvs6DyngQUSKeWgBYTOIc/T/fdv7za+y099iGgQDq1BHTtEqLTlG8q51p4oDl1BHT9IvbJ5mi6tzUWUKA5dQR0vXJVm3cjAQWak3lAq14XKqBAOjXtwpfWXqq6Al1SAgqkU8tJpPPSmffijHxz85gEFEinloBOZ3/ee3lxcfHh+aDJDVABBRKqZyL957UlQPacBjq6+HB2dvbHRSTDAgqkU9elnM+X/by31/bnx+elFN97U/mHE1AgmfoWE/nwbycnJ7+83CufVw831gM9qrg1K6BAOlktZ3c5PRJw52RmuiD9sNpbKwkokE5OAS3ORQ1flm54v1ijZGcCCqRTX0C/nJ398Wk8ir4f0ng6G2ojl0VSK82JElAgnboC+q7Y4Z7k7+uDo+rvCD+zPh9/xvvCA82pKaCvpqd8pgENT2O67hpQ18IDzaknoMX7ER/9+3HxfvDPwhPpBRRol9oWVH4yiV3Ruut2xHezvirejF14oDl1Lah8ezwPaNG84ILKp1u1LGpc6c4EFEinxgWV5wGNL6hcbMjeKp+CunpW9cJQAQXSqXE90HlA91gP9Hw6df7kxVnh99lM+morOwkokE5WAR2/O964lHP4pOIPJ6BAMjntwhd39XptXafHVe9IQIF06jqJdH8Z0PM935Vz9PHs9cnJyeOzN4EMCyiQTi0BvZzPoS8COvk4OI0pBQEF0qkloMVso+HLIqCj36xID3RFPVciTd/TI9WK9PsQUCCdmq6FL7ZBF2sgRxcTSUFAgXRqW87u6nkxbXNY/V04khJQIJ2cFlROQECBdGqZB/q/mjtrtEFAgXRquhLpaL83k0tGQIF0agroxN1mj37OCCiQTi3HQN/P3o14eK/JE/BTAgqkU9c0ptc/Ba9eT0tAgXRqfFfO+TogjR4OFVAgnVqnMV09nzX0XmMJFVAgnbrngX58Pth6d/caCSiQTs0BHb1/JKBAR9Qa0Gk9Gz2TJKBAOvUFdLrzXhwAtZgI0A01BXRx+ujuy9TfrhoBBdKp5Vr4+QSmHxueBDoWUCCl2i7lbMFlSGMBBVKqKaCtuBB+LKBASrXswv/R+K77goAC6VhQGSBIQAGCBBQgqP6Afn3gUk6gEwQUIEhAAYIaOAb65eLP1N9zZwIKpOMkEkCQgAIE1RLQzV32/+sYKNABtVwL/09Pyp9ePXMSCeiCmhYTKb2N3LtjZ+GBTqhrObvhfCN05E3lgK6o5Rjo+2JB5Z8/rX3UDAEF0qnnLPx0u/Po19Gr4p8m39VDQIF06prG9G72rh6Nbn6OBRRIqbZ5oFfPBk1vfo4FFEiptoBOd9+X55KaIqBAOrXvwt/LZRd+kK0D/v44iKafMbtp+rfUSvWfRBrWtxe/z7Og1qcm9NwhO3BItQT03XLy0udapzF16YHaXb1PfFJo+jmzi6Z/RzXb+beS/Pe8dct0Iv18u3O6EXrLRHpgpelcbtv5B0/+q9i6xaWcQCdZTAQgyHJ2AEEWVAYIqi+gX87O/vg0HjX3fkgFAQXSqW0i/U+D6TJ2Xx8cvU39HSsQUCCdmgI6vY5zFtDB8NfU33J3AgqkU09Azyf1PPr340lAR88Gg1vWAwW6oJaAFtcfPZlsfBbTl4qCPk39PXcmoEA6tQT0dDC4PZ4HdHw5/aQhAgqkU0dAJxudxXHPeUAnm6PN7cMLKJBOTZdyFumcB3T+WTMEFEhHQAGC7MIDBNV1Eun+MqDnTiIB3VBLQC/nc+iLgE4+No0J6IRaAlrM/Ry+LAI6+m1gIj3QEfVciVSsSb/kUk6gG2q6Fn70bNlPi4kAHVHbcnZXz4v1mIb33qT+fpUIKJCOBZUBggQUIEhAAYIOG9DRh7Pr/OFKJKADDhvQtelLK66FB7pAQAGCatqFf17MYHpxdvbfjwfDx3bhgU6o7T2R/vHT8sP7qb/l7gQUSKeuxURWCzCdWkwE6IYa1wOdsx4o0BE1rkh/7Wc1E1AgHQEFCKppF7502POyyQVBBRRIp5aTSOelqZ9XD5o8DS+gQDq1BLSYT3/0svho9O64yXn0AgokVM880MvZFUh3rEgPdEhNqzF9fphmRfrR60d3/vLX1SHUqmekBBRIp7bl7D5OV6T/cb8V6f9+PNuGfbxIqIACzclqPdDz5Wbs4jy+gALNySmgn4+Lc1EXF6+Lf2fZFFCgOTkF9Hyx5Xn1cFFQAQWaU1dAP/zbycovoYn0pfn4xYfTlgoo0Jx6Avr5OMGCyuVYFgW9PRZQoEm1BHSjnwkCOp2bf19AgSbVdSnn4O6Li6U/Q3e8HstJlIe/CijQoLoWE7l9zX9Z0fqaJMXVTT+8FVCgOTUtZ5fk8s3z9Q4XS5T8h4ACjal/PdC44lDqvdLu/6vqB1QFFEinpl34NAswnW/08pWAAg2q6yRSmveRe3e83svKi+MJKJBOXeuBJloDdPR+fRL+6NWxgAINqW0i/fDxRervFCCgQDo1nURKMZE+BQEF0skwoKOLD2dnZ39cRC6oF1AgnVoC+ujOurvxgH58Xgpx9dWZBRRIJ6fl7Gbr2K05qjhBX0CBdLIK6OV0UZI780Xxfpq+u0e1+VECCqSTU0CLY6nDl6Ub3ld+j2QBBdLJKaDnW7mcL2q3OwEF0jlsQGcz6BOdhd9YjWnqcvX+crv9cAIKJJNRQK+7nslydkBzDhzQR8WUpUTTmAQUaJeMjoFOduG3lhW1Cw80J6OAjk+3all5rXsBBdKpZT3QP9Lcc7Gg8q23pRuuJv2stta9gALp1HQt/N3KF11e53w6df7kxVnh99lM+kqzmAQUSKi+xUSqX7i+7d3G+yMPhk8q/nACCiRTyzHQ97NL2If33m7/f9WMXpcTOnxcdUUmAQXSqekk0uj1T/Pkxd4TvnxXH89en5ycPD57E1jPTkCBdOo7C79o6I+VNxsTElAgnVqnMX2Z74AfvWyqoQIKpFP3PNAvs+3Q6kcvV6xID7RDzQF9v1xQvtr8zSUr0gOtUWdA3z+a78BPKxgpqBXpgRapLaDzTcf5vnvlazCnrEgPtEk9AV3seK8mgn4+rr6onRXpgVap8W2Nj16u31Y5oFakB1qlroBunnaf3FZpHbqxFemBtqknoNdcw3lR+Y4tqAy0S0brgVYP6OAah/rpgP7JKKDVV6QXUOCQDhvQG5dS/lD1UiIr0gOtcuh35Tz61gp2V88rn4W3Ij3QKgfeAn0+GPx83QJ2V88rnj6fsiI90CaHPgb69+NrLlkvrukc/mvgvq1ID7TIwU8izS5f/8uLxbSli/85vSL+m7v2N7MiPdAeNZyFf79YAWR4Z1G/tYuSKrIiPdAStUxj+vhobb87zVt0hggokE5d80Df/9t083N455dEbxIfI6BAOhlNpE9BQIF0BBQgKPOAWkwEaE69AS3mcV6zMlOcgALNqSmg7x8WnTufzWaKvZ3ctQQUaE49AZ2tJf95Pg208kXwN/hycd2Vot8koEA6tQT08+y9i6YZLRZQqnb9ekoCCqRTS0DPpyuHzNeeu4y8H2cqAgqkU0dA5yshF9uhT2NvJ5eMgALp1PSmcvNTSEVH9w7o6OLD2dnZHxeBS+EFFEioxoCezk4f7RfQxTvMz95mvvJF9QIKpFNfQBdvvzHZk6++lPLc1cPBuqOKU6IEFEinpmOgg6eLQ6DFhmj0JNLldB7UnZOZ6YL0w813iv/ODyegQDJ1nYU/evNfp3vwo98Gs44GTLZkB8PySqLvj6tOKhVQIJ1aAlqUb/b+RdOPohug51u5LO6u0qRSAQXSqedKpNk1SLc+TYv3c/AI6OxIwLqb3xf+mh9OQIFkaroWfvT+5JfilPnXf6p+5nzhutP3roUHmpPRcnYCCrRLRgGdX9C0xi480JyMAlpMgNqo5WJu6c4EFEgnp4AWp6JulZdjvnpWdXVRAQXSySmgswWZhycvzgq/z2bSV1saT0CBdLIK6PQtQdYMn1S7AwEF0skroOPR63JCh4+rTikVUCCdzAI6Mfp49vrk5OTx2ZvAhHwBBdLJL6B7EVAgHQEFCMo1oF8f3bkbWJZZQIF0sg1obF17AQXSEVCAIAEFCBJQgCABBQgSUIAgAQUIElCAoFwDGiSgQDoCChAkoABBAgoQJKAAQQIKECSgAEECChAkoABBAgoQJKAAQQIKECSgAEECCoXB3Lc+h2sIKD22KuRgI5jf+1xgKQgoPfG9Iu721YJKmYDSZd/bxEz6jQS1fwSUjqq4idmp705dBJSOOPAmJlxDQOmIdm/ztfunI0pAyVouTbrmGGmTPw6JCCi5ynqjLusfniUBJRcdO8gpoF0goOSi0xttXR5blwko7daTqghongSU1ur0Jud39HLQGRJQWqu39ez3346sCCi0kYBmQUBpDZtd5EZAaQ0B/Sa/mZYSUBqmCzsQ0JYSUJpjkzPKr6wlBJTmqGeQvzxtIaCQIQFtBwGlPjac6BgBpT4CeiB+p03pdEAH12j6Z4L0PLubIqAcml97HTy7G9HpgG7zFKuXv1vN8Auvi4ByQOrZCL/22ggodI8N/5oIKIl55baDh6EOAkpCjnnSLwJKQuLZSh6VgxFQ6Dr7BQcjoOzNa7P9BPQwBJT92LihxwSUfahnhjxi6Qgo+/BazJC/eukIKPSO4y6pCChVmOjZFR7EJASUKgQUSgQUes4fxDgB5fu8wjrNXkWcgHIj++y94CEOElBupJ7wbQIKlPmDWYGAAmV2OioQULZ5AfWbw947E1A2efXgb+iOBJQ16gm7E1DWyCfsTkCBm/ibegMBZew1wg1cSnEDAe07lxrxXZ4g3yKgfaeeECagQAX+3JYJKFCBXZYyAe0jLwH24KD5ioD2jZNG7M8TaE5A+0Y8IRkBBfbQ77/HAgrsod8HhAS0H/r8HOfA+pzQbAP65cPZm0+Vv6qfD7OzRhxYb59emQX046Mf/jb5Z/T6eJqEo5cVv76PD7N6wqFkFdDR88GgCOjo2XIuzs/VtkL7GBL1hEPJKaDTbk4COv13eHJyUmyG3q50F1oCB9Wzv9c5BfRy8tj846fZv/eLG0a/TUL6a5W76NeDC7Xr2RGjnAJ6Ou/m6Wq787TiJmhfHtl+PYlplV6ds8wooF8fzDY3F/8WPh8PblU5CtqHh9W1mjStP0+/vAI6PQW/+He88fEu+vCwiifUJcOAjp4JKNAGGQW0OPn+tPjgdLULfzmwCw8t1vHdoYwCOj6fzQItDnzOzxwVTb1f5S66+2Dab6eVOn48PqeATvbXB0dvx9OSzqYxvTKNaeysEe3W6SdnTgEdXxYz5+++uLj4bVLSx78/Px5U3ADtckCb/ingm7r7/MwqoMXO+4Zq/exmQIGG5BXQ5SoicxYTgax0bVs0s4BOfPn95NGdibu/vOjzcnb22slR14435RfQvXTloeva05D+6NYZTwHNT6eegPRQh56/GQZ0dPHh7Ozsj4vqO/AdCmjTPwMwzi+gH5+XziHde1P1y5UHSCevgF493JjFdFRpGr2AQrvkvjeVVUCnE+kHd05mfio+GT6tdA8ZP1p23Omg3A/o5xTQ4lLOYXnm5/vjQbXFmLINaLfOXMJK3k/tnAJ6vpXLIqk9WEwk76cYfEfGz+6MArpczq6kH8vZZfz8gk7LKKDXLZ5sQWWgOQIKtEV2O1sZBXSyC7+1+GeHd+Ed9qR/sjvcn1FAi/cw3qhlcVi0m29rnN0TCZLIbMJJTgEtVgO99bZ0w9Wzbq5In9dTCNLK6dmfU0CLeUyTYp68OCv8PptJ38UV6XN6AkGfZRXQ8bvNFemHT6rdgTAB6eQV0I0V6YePq67I1OaA2u6EDa1/TWQW0InRx7PXJycnj8/eBNaza+3Dkdmhc6hF618W+QV0Ly19LFr/NIGGtPy1IaBt0OZnCDSszS+PDAPa+xXpgZbILaBWpAdaI6+AdmpF+lYf2oEWat9LJquAdmlF+pYfG4cWat+rJqeAdmdF+vY9DyALbZvvl1NAu7MifaueApCVVr16Mgpof1ekB9opo4BaUBkoa35btNMBHVzjUD/dDlq16wH5a/4llVFAq69I36aANt9v6J6mX1QZBTTnFenVEw6i4VdWTgHNeESvsr0AAA1USURBVEV69YQDEdBd9WVFeiAPWQXUivRAm+QV0LxWpHfYE+rUwAsus4CO81mR3nkjqFcDr7n8ArqXun676gkNqH22oIAe6PvIJzRBQA9I1oB0BBQgKPOAtmsxETvu0CI1vB4FNBUXu0O71PCSFNA01BPa5+Cvy8wDOv5y8WeV//yQAT3QPQN7ENCEZA5IR0ABggR0r3sTZMjFIV6vGQZ0dPHh7Ozsj4vApfBJh+u8EeTkEK/Y3AL68XlpNaZ7b6p+ebLhqifkJ/nrNq+AXj3cWA/0qNJ69IkDmuiugNr0OaCX08VA75zMTBekH26+U/zNVA9IJ6eAfn0wCebL0g3vJ0GtNI9eQIGEcgro+VYui6RWelOkPYdrxx06I8WrOaOAFu9hvLnDfvP7wm/bZ7gudocuSfGCziig1133Xt+18OoJXbP/q1pAd/5K9YTO6U9AJ7vww81ZS3XuwgOsyyig49OtWhaHRW9XuQsBBdLJKaCfjycFfVu64WrSz62N0hsJKJBOTgEt5jFNinny4qzw+2wmfaVZTFWH67wR9EXo1Z5VQMfvjjcu5Rw+qXYHlYbrxDv0R+j1nldAx6PX5YQOH1ddkWn34aon9E31V31mAZ0YfTx7fXJy8vjsTWA9u2oBrX7/QM66H9C9iCKQjoACBOUa0K+P7tyttA7TjIAC6WQb0IrXcM4JKJCOgAIECShAkIACBAkoQJCAAgQJKECQgAIE5RrQIAEF0hFQgCABBQgSUIAgAQUIElCAIAEFCBJQgCABBQgSUIAgAQUIElCAoN4FFCCd5I1KfYcpNf3LBroleaNS32FP9ODoQg+G2Icx9mCITY6xB7/dg+jB07IHQ+zDGHswRAHNTw+elj0YYh/G2IMhCmh+evC07MEQ+zDGHgxRQPPTg6dlD4bYhzH2YIgCmp8ePC17MMQ+jLEHQxTQ/PTgadmDIfZhjD0YooDmpwdPyx4MsQ9j7MEQBTQ/PXha9mCIfRhjD4YooPnpwdOyB0Pswxh7MEQBzU8PnpY9GGIfxtiDIQpofnrwtOzBEPswxh4MUUDz04OnZQ+G2Icx9mCIApqfHjwtezDEPoyxB0MU0Pz04GnZgyH2YYw9GKKA5qcHT8seDLEPY+zBEAU0Pz14WvZgiH0YYw+GKKD56cHTsgdD7MMYezBEAc1PD56WPRhiH8bYgyEKKECGBBQgSEABggQUIEhAAYIEFCBIQAGCBBQgSEABggQUIEhAAYIEFCBIQAGCBBQgSEABggQUIEhAAYIEFCBIQAGCBBQgSEABggQUIEhAAYIEFCBIQAGCBBQgSEABggT0e0av7wwGgx/vvV3ddPX8eDAY3nxLfj4fD54uP+neEEfvisfxzpNPy1s6N8aPOwwo4yF+ffDD31af7TK0GgYroN/xbvIQzPy8edPwX799S36+PhisAtq9IX5ePI5Hixdh18Y4erV4pt5f3NSpIY6eDUoB3WVodQxWQG92OVi5vXXT02/dkqHT0k/fvSEu+zkY3Jptg3ZujKerH39e0E4NcTQZ3yqguwytlsEK6I2KzbKjN5MPPj6c/CH7dXnT29ktswd0+5YMXZaeZ90bYvHzD58Ux2OO53np3BiLPxHFzurVs04+Uyfbn6WfeZeh1TNYAb3R5XK7s3gApx+eL7ZhilvuX39Lfopn2zKg3Rvi+fI1dDkfSefGeL58qp5+c0D5DvH9dA9i2cFdhlbPYAX0Rqerrf/JX/ji8Zg8GrO/7zfckp/i+NJ/W4y1e0Ms/fzzD7s3xtPljz//q9+hIV5NNiIH9x4uA7rL0GoarIDuarKNVjwK838K84do+5b8TP5aPz1fBLR7Q5y8gm6v39K9MW4FtENDPC8OwJROIu0ytJoGK6C7mj8gq536xfbp9i3ZmQTm/ngZ0O4N8XJrH657Y1zbhS9++g4N8Xz486fyWfhdhlbTYAV0V/MHpPxaPF88Uhu35Gby1Jz8bSgHtGNDnP7M00mBPz6Z3dK9MRZHsacnkZ7Pj/11aIhfivGsB/S7Q6tpsAK6o8nzc7obUH4sZo/R9i25me39LcfRvSEWAzyfz2iZzQPt3hhnBwo7PMRSQHcZWk2DFdAdna5OwnfqaTle/tDdDui/LOcETl+F3RvjbAJT4d7s0F/XhiigGVvN4u3a03J1tL27AZ3OIZzu334prtYp/hB2bozTAcwNn8w/79QQBTRfo+Xk5M49LYvNs40/DZ0b4jSgq6tz1o5XjDsyxmk/f/5z/jfi6bh7QxTQbF0tL0Pq3tPymm52bojF8ZflRMDZGdnOjbG0lMG72d5S14YooLkqLpJbLkHRoXObU6spkh0+C39a+vlnY+ncGK+dx9OpIToLn6npvtHyQoYOza6bWh05W65D0bUhTge5HdBujbHciPNODtE80DydD9a2/zt0fcfUNQHt2hDXX0zn3Rzj9h5r14boSqQsnQ/Wf/kdusJ46pqAdm2I0x96uQ7FbGukc2Pc3uDq2hBLAXUtfDYmz8sf1he07tIaN2tW2zDdG2Ixi3f2Enq3mgjaqTEWB+pX62Aurvno0hDLCypbjSkTi+uP1m+aLhG6sfDgmyxXWSxbBbR7Q5yeB3wzn+OzWg+0S2M8LU9jmm6MdmyI5YDuMrR6BiugN1rfwZ21tFPrfJeUjqJ1b4ilB7KjK9LPVnSdOVqufdqhIa69pYcV6bMwenZNQMd/33qrle1bMlQ+DdG9IS5+/sWFjt0b4+rJequTQ1x/T6RdhlbHYAX0JuW/6quAduu9DpfWJst1b4hfXv80+fnvvlnd0rkxfnw0/fE7OsT1gHpXToDMCShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgNIeo2eDH/5283/y9cHg1qd6fhr4LgGlPQSUzAgo7SGgZEZAyYqA0iYCSlYElDYRULIioLSJgNKcz8fLGl4OBvcXx0Cn/4xe/zQYDO+9Xfy3V88nn/78aRXQ0bs7g8Hg7stP8y+fHT2dfO3g9vIbnA8GTze+19qXze5n/RvB7gSU5kxqN/x19uFp8VEpoP/neDAzD+D57LNb/28R0M+L/+Do7bjUzWVJx/P/aFHTeUvXv6y44eHs8+HTMVQloDTovNjuLMw2LFcBXZkV9nzx6X+ZB3QZwnkwJ58X/+Xkfub3OLU6rT//aPPLpl9Q/kZQhYDSoOU+/HQPfi2gwyeToL4azHpYZK7YZHxX9K/4iukNL4v97+P5pufp9P+Y/e/Kch9+ti167ZcNn4zHVw/Le/6wIwGlSafzDcHz6QZgKaDzDcfzWdfOB6Ud9+Kjy2UoJ02cbjsWbXx6ubkhudyHP52WdOvLFl+9+gAqEFCadDnbQpwkswhbKaDz/fDZJmrpWOk8paer3F3O/+PJvz8er+3Ar+646GNxz1tfdrnc8Cydb4JdCShNmoStCNikk0X4VgFddG4W0Hn+1m5Y7qkvNjJnR0435zjNNm3nudz+MtlkLwJKo2b78PPM3RDQRfhmH65O/QxW1Sx277d2w+dpPl2eYlr/slM77uxDQGnUdB9+saP9rYCW5ovOAlo6mb4KaLEJujXJfnbX8wJvf5mAshcBpVHTffj5ZuLuW6Cloq5Mpzrd3751cl/z46TbXyag7EVAaVaxDz/fg690DHRr2abiPPrxtfvwTxed3P4yx0DZi4DSrM/Hw//xbLUTfm1Ai53z1RVJ6zcsnU62Ms+3Z3NO/tPbiy3Y7S9bnYUvXbQEuxJQmjWJ2j88mO95fyugq3mgxWmg+Q0/zK/FnF/NNJ3iOZ0MuvENzgc//O/FrVtf9nm5zXp6ze4/fIeA0rDzwY/H84h9M6DTK4jejMfvy1ciFdcqjb+8Gizm4M9nym/u20/PHM1v3PqyxZVIxTVP31vLGbYIKA1bXFw0viGgRRhn/uHBxg3zE0fzbdTFHPzShUXT+aGLvfPNLyvPbLIBSmUCSsNK1x19O6Czq+DLqzFdHpfDt9wVn1/MWb4yszg7v9yvX/+y8ewqeP0kSEBp2ml5Y/FbAR1fPT/eWA/0dbGw54+P/5zdx2Ijc/ZROaCT+yjtna992fSGYj3QwV3rgRIgoDTMGvPkS0Bp2Lm9Z7IloDTr/bHT32RLQGnQpdM3ZE1AadDnxbxOyJKA0qCvDweDn/WTbAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQND/B3AOzDvGiAOPAAAAAElFTkSuQmCC" alt width="672" /></p>
+</div>
+<div id="the-model" class="section level2">
+<h2>The model</h2>
+<p>bs (optional): character string indicating the bs for the basis
+applied to the transformed coordinates; if empty, the appropriate
+defaults are used.</p>
+<pre class="r"><code>fitted_swf &lt;- fitted(swf_model)
+rownames(fitted_swf) &lt;- swf_wide$id
+
+swf_fitted &lt;- fitted_swf[match(id_order, rownames(fitted_swf)), ]
+
+predictors$swf_fitted &lt;- swf_fitted
+
+model &lt;- pfr(
+  yield_scaled ~
+    lf(swf_fitted, argvals = grid, bs = &quot;ps&quot;, k = 15) +
+    s(distance_to_tree_strip, bs = &quot;tp&quot;,k = k_dist) +
+    s(fert_N,         bs = &quot;tp&quot;,k = k_fertN) +
+    s(temp_C_mean,    bs = &quot;tp&quot;,k = k_temp) +
+    s(sun_MJ_m2_mean, bs = &quot;tp&quot;,k = k_sun) +
+    s(precip_mm_sum,  bs = &quot;tp&quot;,k = k_prec) +
+    s(l_shdi,         bs = &quot;tp&quot;,k = k_shdi) +
+    s(l_contag,       bs = &quot;tp&quot;,k = k_cont) +
+    s(l_ed,           bs = &quot;tp&quot;,k = k_ed) +
+    s(AFage,          bs = &quot;tp&quot;,k = k_afage) +
+    s(treeage,        bs = &quot;tp&quot;,k = k_tree) +
+    crop_unified +
+    s(field, bs = &quot;re&quot;),
+  data   = predictors,
+  family = &quot;gaussian&quot;,
+  method = &quot;REML&quot;
+)
+
+summary(model)</code></pre>
+<pre><code>## 
+## Family: gaussian 
+## Link function: identity 
+## 
+## Formula:
+## yield_scaled ~ s(x = swf_fitted.tmat, by = L.swf_fitted, bs = &quot;ps&quot;, 
+##     k = 15) + s(distance_to_tree_strip, bs = &quot;tp&quot;, k = k_dist) + 
+##     s(fert_N, bs = &quot;tp&quot;, k = k_fertN) + s(temp_C_mean, bs = &quot;tp&quot;, 
+##     k = k_temp) + s(sun_MJ_m2_mean, bs = &quot;tp&quot;, k = k_sun) + s(precip_mm_sum, 
+##     bs = &quot;tp&quot;, k = k_prec) + s(l_shdi, bs = &quot;tp&quot;, k = k_shdi) + 
+##     s(l_contag, bs = &quot;tp&quot;, k = k_cont) + s(l_ed, bs = &quot;tp&quot;, k = k_ed) + 
+##     s(AFage, bs = &quot;tp&quot;, k = k_afage) + s(treeage, bs = &quot;tp&quot;, 
+##     k = k_tree) + crop_unified + s(field, bs = &quot;re&quot;)
+## 
+## Parametric coefficients:
+##                      Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           1.05506    0.84148   1.254    0.210    
+## crop_unifiedgrass    -0.18703    0.35085  -0.533    0.594    
+## crop_unifiedmaize     0.84409    0.64590   1.307    0.192    
+## crop_unifiedpotato   -2.63140    0.58424  -4.504 7.97e-06 ***
+## crop_unifiedrapeseed -0.97951    0.21296  -4.600 5.14e-06 ***
+## crop_unifiedrye      -3.12797    0.48373  -6.466 2.04e-10 ***
+## crop_unifiedwheat     0.07261    0.16229   0.447    0.655    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Approximate significance of smooth terms:
+##                                       edf Ref.df      F  p-value    
+## s(swf_fitted.tmat):L.swf_fitted 2.9059540  2.978  7.243    8e-05 ***
+## s(distance_to_tree_strip)       4.7570986  4.959 43.623  &lt; 2e-16 ***
+## s(fert_N)                       2.2585604  2.771  1.094 0.271606    
+## s(temp_C_mean)                  2.1811279  2.528  6.426 0.003133 ** 
+## s(sun_MJ_m2_mean)               3.2124131  3.551  6.204 0.000119 ***
+## s(precip_mm_sum)                1.0000026  1.000  4.055 0.044463 *  
+## s(l_shdi)                       1.0000101  1.000  1.033 0.309877    
+## s(l_contag)                     1.0000015  1.000  1.685 0.194685    
+## s(l_ed)                         1.0000370  1.000  6.865 0.008999 ** 
+## s(AFage)                        1.0000029  1.000  0.226 0.634423    
+## s(treeage)                      1.0001770  1.000  1.583 0.208857    
+## s(field)                        0.0002572  3.000  0.000 0.786282    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## R-sq.(adj) =  0.754   Deviance explained = 76.4%
+## -REML = 667.55  Scale est. = 0.40569   n = 647</code></pre>
+<pre class="r"><code>summary(model)$r.sq</code></pre>
+<pre><code>## [1] 0.7538834</code></pre>
+<pre class="r"><code>summary(model)$dev.expl</code></pre>
+<pre><code>## [1] 0.7642903</code></pre>
+<pre class="r"><code>AIC(model)</code></pre>
+<pre><code>## [1] 1285.026</code></pre>
+<pre class="r"><code>#gam.check(model)</code></pre>
+<pre class="r"><code>model2 &lt;- pfr(
+  yield_scaled ~
+    lf(swf_mat, argvals = grid, bs = &quot;ps&quot;, k = 15) +
+    s(distance_to_tree_strip, bs = &quot;tp&quot;,k = k_dist) +
+    s(fert_N,         bs = &quot;tp&quot;,k = k_fertN) +
+    s(temp_C_mean,    bs = &quot;tp&quot;,k = k_temp) +
+    s(sun_MJ_m2_mean, bs = &quot;tp&quot;,k = k_sun) +
+    s(precip_mm_sum,  bs = &quot;tp&quot;,k = k_prec) +
+    s(l_shdi,         bs = &quot;tp&quot;,k = k_shdi) +
+    s(l_contag,       bs = &quot;tp&quot;,k = k_cont) +
+    s(l_ed,           bs = &quot;tp&quot;,k = k_ed) +
+    s(AFage,          bs = &quot;tp&quot;,k = k_afage) +
+    s(treeage,        bs = &quot;tp&quot;,k = k_tree) +
+    crop_unified +
+    s(field, bs = &quot;re&quot;),
+  data   = predictors,
+  family = &quot;gaussian&quot;,
+  method = &quot;REML&quot;
+)</code></pre>
+<pre class="r"><code>model3 &lt;- pfr(
+  yield_scaled ~
+    lf(swf_mat, argvals = grid, bs = &quot;ps&quot;, k = 15) +
+    s(distance_to_tree_strip, bs = &quot;tp&quot;,k = k_dist) +
+    crop_unified +
+    s(field, bs = &quot;re&quot;),
+  data   = predictors,
+  family = &quot;gaussian&quot;,
+  method = &quot;REML&quot;
+)
+
+summary(model3)</code></pre>
+<pre><code>## 
+## Family: gaussian 
+## Link function: identity 
+## 
+## Formula:
+## yield_scaled ~ s(x = swf_mat.tmat, by = L.swf_mat, bs = &quot;ps&quot;, 
+##     k = 15) + s(distance_to_tree_strip, bs = &quot;tp&quot;, k = k_dist) + 
+##     crop_unified + s(field, bs = &quot;re&quot;)
+## 
+## Parametric coefficients:
+##                      Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)          -0.44062    0.64513  -0.683   0.4948    
+## crop_unifiedgrass     0.80960    1.85311   0.437   0.6623    
+## crop_unifiedmaize     1.96747    0.11631  16.916  &lt; 2e-16 ***
+## crop_unifiedoat      -0.69192    0.41490  -1.668   0.0956 .  
+## crop_unifiedpea      -1.02812    0.22613  -4.547 6.03e-06 ***
+## crop_unifiedpotato    1.73892    0.20489   8.487  &lt; 2e-16 ***
+## crop_unifiedrapeseed -0.73545    0.05857 -12.557  &lt; 2e-16 ***
+## crop_unifiedrye       0.15805    0.18229   0.867   0.3861    
+## crop_unifiedwheat     0.34557    0.05762   5.997 2.69e-09 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Approximate significance of smooth terms:
+##                             edf Ref.df     F p-value    
+## s(swf_mat.tmat):L.swf_mat 6.391  6.905 32.28  &lt;2e-16 ***
+## s(distance_to_tree_strip) 4.755  4.965 50.34  &lt;2e-16 ***
+## s(field)                  5.873  6.000 50.86  &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## R-sq.(adj) =  0.726   Deviance explained = 73.2%
+## -REML = 1036.1  Scale est. = 0.31237   n = 1171</code></pre>
+<pre class="r"><code>summary(model3)$r.sq</code></pre>
+<pre><code>## [1] 0.7257838</code></pre>
+<pre class="r"><code>summary(model3)$dev.expl</code></pre>
+<pre><code>## [1] 0.7316475</code></pre>
+<pre class="r"><code>AIC(model3)</code></pre>
+<pre><code>## [1] 1989.994</code></pre>
+<pre class="r"><code>model4 &lt;- pfr(
+  yield_scaled ~
+    af(swf_mat, argvals = grid, Qtransform=TRUE, k=c(7,7)) +
+    s(distance_to_tree_strip, bs = &quot;tp&quot;,k = k_dist) +
+    s(fert_N,         bs = &quot;tp&quot;,k = k_fertN) +
+    s(temp_C_mean,    bs = &quot;tp&quot;,k = k_temp) +
+    s(sun_MJ_m2_mean, bs = &quot;tp&quot;,k = k_sun) +
+    s(precip_mm_sum,  bs = &quot;tp&quot;,k = k_prec) +
+    s(l_shdi,         bs = &quot;tp&quot;,k = k_shdi) +
+    s(l_contag,       bs = &quot;tp&quot;,k = k_cont) +
+    s(l_ed,           bs = &quot;tp&quot;,k = k_ed) +
+    s(AFage,          bs = &quot;tp&quot;,k = k_afage) +
+    s(treeage,        bs = &quot;tp&quot;,k = k_tree) +
+    crop_unified +
+    s(field, bs = &quot;re&quot;),
+  data   = predictors,
+  family = &quot;gaussian&quot;,
+  method = &quot;REML&quot;
+)
+
+summary(model4)</code></pre>
+<pre><code>## 
+## Family: gaussian 
+## Link function: identity 
+## 
+## Formula:
+## yield_scaled ~ s(z = swf_mat.tmat, x = swf_mat.omat, by = L.swf_mat, 
+##     k = c(7, 7), bs = &quot;dt&quot;, xt = list(tf = list(swf_mat.omat = &quot;QTransform&quot;), 
+##         basistype = &quot;te&quot;)) + s(distance_to_tree_strip, bs = &quot;tp&quot;, 
+##     k = k_dist) + s(fert_N, bs = &quot;tp&quot;, k = k_fertN) + s(temp_C_mean, 
+##     bs = &quot;tp&quot;, k = k_temp) + s(sun_MJ_m2_mean, bs = &quot;tp&quot;, k = k_sun) + 
+##     s(precip_mm_sum, bs = &quot;tp&quot;, k = k_prec) + s(l_shdi, bs = &quot;tp&quot;, 
+##     k = k_shdi) + s(l_contag, bs = &quot;tp&quot;, k = k_cont) + s(l_ed, 
+##     bs = &quot;tp&quot;, k = k_ed) + s(AFage, bs = &quot;tp&quot;, k = k_afage) + 
+##     s(treeage, bs = &quot;tp&quot;, k = k_tree) + crop_unified + s(field, 
+##     bs = &quot;re&quot;)
+## 
+## Parametric coefficients:
+##                      Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           0.00000    0.00000     NaN      NaN    
+## crop_unifiedgrass    -0.19817    0.31374  -0.632 0.527852    
+## crop_unifiedmaize     2.44426    0.23492  10.405  &lt; 2e-16 ***
+## crop_unifiedpotato   -1.45376    0.36187  -4.017 6.61e-05 ***
+## crop_unifiedrapeseed -1.02500    0.13402  -7.648 7.79e-14 ***
+## crop_unifiedrye      -1.72396    0.45111  -3.822 0.000146 ***
+## crop_unifiedwheat    -0.05672    0.13758  -0.412 0.680295    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Approximate significance of smooth terms:
+##                                               edf Ref.df      F  p-value    
+## te(swf_mat.tmat,swf_mat.omat):L.swf_mat 4.7622819  5.457  8.063  &lt; 2e-16 ***
+## s(distance_to_tree_strip)               4.7604935  4.960 43.427  &lt; 2e-16 ***
+## s(fert_N)                               1.0001796  1.000 14.294 0.000172 ***
+## s(temp_C_mean)                          1.0001694  1.000 19.490 1.24e-05 ***
+## s(sun_MJ_m2_mean)                       1.1777116  1.319 36.087  &lt; 2e-16 ***
+## s(precip_mm_sum)                        1.0000367  1.000 15.826 7.78e-05 ***
+## s(l_shdi)                               1.0000608  1.000 30.021  &lt; 2e-16 ***
+## s(l_contag)                             1.0001344  1.000  6.466 0.011232 *  
+## s(l_ed)                                 1.0000156  1.000  0.273 0.601832    
+## s(AFage)                                1.0000119  1.000  1.666 0.197324    
+## s(treeage)                              1.0000249  1.000  6.354 0.011961 *  
+## s(field)                                0.0004489  5.000  0.000 0.447384    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Rank: 102/103
+## R-sq.(adj) =  0.753   Deviance explained = 76.2%
+## -REML = 672.01  Scale est. = 0.40725   n = 647</code></pre>
+<pre class="r"><code>summary(model4)$r.sq</code></pre>
+<pre><code>## [1] 0.7529338</code></pre>
+<pre class="r"><code>summary(model4)$dev.expl</code></pre>
+<pre><code>## [1] 0.7619986</code></pre>
+<pre class="r"><code>AIC(model4)</code></pre>
+<pre><code>## [1] 1283.185</code></pre>
+<pre class="r"><code>model5 &lt;- pfr(
+  yield_scaled ~
+    lf(swf_fitted, argvals = grid, bs = &quot;ps&quot;, k = 15) +
+    s(distance_to_tree_strip, bs = &quot;tp&quot;,k = k_dist) +
+    te(longitude, latitude, bs = c(&quot;tp&quot;, &quot;tp&quot;), k = c(5, 5)) +  
+    fert_N + treeage + crop_unified +
+
+    s(field, bs = &quot;re&quot;),
+  data   = predictors,
+  family = &quot;gaussian&quot;,
+  method = &quot;REML&quot;
+)
+
+summary(model5)</code></pre>
+<pre><code>## 
+## Family: gaussian 
+## Link function: identity 
+## 
+## Formula:
+## yield_scaled ~ s(x = swf_fitted.tmat, by = L.swf_fitted, bs = &quot;ps&quot;, 
+##     k = 15) + s(distance_to_tree_strip, bs = &quot;tp&quot;, k = k_dist) + 
+##     te(longitude, latitude, bs = c(&quot;tp&quot;, &quot;tp&quot;), k = c(5, 5)) + 
+##     fert_N + treeage + crop_unified + s(field, bs = &quot;re&quot;)
+## 
+## Parametric coefficients:
+##                       Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)          -3.248035   3.329042  -0.976    0.330    
+## fert_N                0.003946   0.000822   4.800 1.98e-06 ***
+## treeage               0.026361   0.017992   1.465    0.143    
+## crop_unifiedgrass    -0.480704   2.477791  -0.194    0.846    
+## crop_unifiedmaize     2.004664   0.153768  13.037  &lt; 2e-16 ***
+## crop_unifiedpotato   -1.658435   0.308176  -5.381 1.04e-07 ***
+## crop_unifiedrapeseed -0.707808   0.105892  -6.684 5.13e-11 ***
+## crop_unifiedrye      -3.443182   0.286380 -12.023  &lt; 2e-16 ***
+## crop_unifiedwheat     0.174257   0.106300   1.639    0.102    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Approximate significance of smooth terms:
+##                                       edf Ref.df      F p-value    
+## s(swf_fitted.tmat):L.swf_fitted 2.000e+00  2.000  0.845   0.430    
+## s(distance_to_tree_strip)       4.739e+00  4.952 40.766  &lt;2e-16 ***
+## te(longitude,latitude)          3.000e+00  3.000  0.439   0.725    
+## s(field)                        1.289e-15  5.000  0.000  &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## R-sq.(adj) =  0.732   Deviance explained = 73.9%
+## -REML = 682.53  Scale est. = 0.44215   n = 647</code></pre>
+<pre class="r"><code>summary(model5)$r.sq</code></pre>
+<pre><code>## [1] 0.731764</code></pre>
+<pre class="r"><code>summary(model5)$dev.expl</code></pre>
+<pre><code>## [1] 0.7391295</code></pre>
+<pre class="r"><code>AIC(model5)</code></pre>
+<pre><code>## [1] 1328.975</code></pre>
+<pre class="r"><code>model6 &lt;- pfr(
+  yield_scaled ~
+    lf(swf_fitted, argvals = grid, bs = &quot;ps&quot;, k = 15) +
+    s(distance_to_tree_strip, bs = &quot;tp&quot;,k = k_dist) +
+    te(temp_C_mean, precip_mm_sum, bs = c(&quot;tp&quot;, &quot;tp&quot;), k = c(5, 5)) +
+    fert_N + treeage + crop_unified +
+
+    s(field, bs = &quot;re&quot;),
+  data   = predictors,
+  family = &quot;gaussian&quot;,
+  method = &quot;REML&quot;
+)
+
+summary(model6)</code></pre>
+<pre><code>## 
+## Family: gaussian 
+## Link function: identity 
+## 
+## Formula:
+## yield_scaled ~ s(x = swf_fitted.tmat, by = L.swf_fitted, bs = &quot;ps&quot;, 
+##     k = 15) + s(distance_to_tree_strip, bs = &quot;tp&quot;, k = k_dist) + 
+##     te(temp_C_mean, precip_mm_sum, bs = c(&quot;tp&quot;, &quot;tp&quot;), k = c(5, 
+##         5)) + fert_N + treeage + crop_unified + s(field, bs = &quot;re&quot;)
+## 
+## Parametric coefficients:
+##                        Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           2.1137892  0.3456939   6.115 1.71e-09 ***
+## fert_N                0.0015109  0.0009658   1.564   0.1182    
+## treeage              -0.0519468  0.0228856  -2.270   0.0236 *  
+## crop_unifiedgrass    -0.5285739  0.3449012  -1.533   0.1259    
+## crop_unifiedmaize     1.2352579  0.5901746   2.093   0.0368 *  
+## crop_unifiedpotato   -0.6990743  0.7113602  -0.983   0.3261    
+## crop_unifiedrapeseed -1.0916979  0.1335734  -8.173 1.69e-15 ***
+## crop_unifiedrye      -2.5540488  0.3619755  -7.056 4.59e-12 ***
+## crop_unifiedwheat     0.0992517  0.1539313   0.645   0.5193    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Approximate significance of smooth terms:
+##                                       edf Ref.df     F p-value    
+## s(swf_fitted.tmat):L.swf_fitted 2.2430173  2.398 38.27  &lt;2e-16 ***
+## s(distance_to_tree_strip)       4.7631209  4.961 44.29  &lt;2e-16 ***
+## te(temp_C_mean,precip_mm_sum)   9.7236141 11.063 10.49  &lt;2e-16 ***
+## s(field)                        0.0007279  3.000  0.00   0.505    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## R-sq.(adj) =  0.754   Deviance explained = 76.4%
+## -REML = 664.64  Scale est. = 0.4047    n = 647</code></pre>
+<pre class="r"><code>summary(model6)$r.sq</code></pre>
+<pre><code>## [1] 0.7544843</code></pre>
+<pre class="r"><code>summary(model6)$dev.expl</code></pre>
+<pre><code>## [1] 0.7638832</code></pre>
+<pre class="r"><code>AIC(model6)</code></pre>
+<pre><code>## [1] 1281.412</code></pre>
+<pre class="r"><code>model7 &lt;- pfr(
+  yield_scaled ~
+    lf(swf_fitted, argvals = grid, bs = &quot;ps&quot;, k = 15) +
+    s(distance_to_tree_strip, bs = &quot;tp&quot;,k = k_dist) +
+    te(temp_C_mean, precip_mm_sum, fert_N, treeage, bs = c(&quot;tp&quot;,&quot;tp&quot;,&quot;tp&quot;, &quot;tp&quot;), k = c(5, 5, 5, 5)) +
+    crop_unified +
+    s(field, bs = &quot;re&quot;),
+  data   = predictors,
+  family = &quot;gaussian&quot;,
+  method = &quot;REML&quot;
+)
+
+summary(model7)</code></pre>
+<pre><code>## 
+## Family: gaussian 
+## Link function: identity 
+## 
+## Formula:
+## yield_scaled ~ s(x = swf_fitted.tmat, by = L.swf_fitted, bs = &quot;ps&quot;, 
+##     k = 15) + s(distance_to_tree_strip, bs = &quot;tp&quot;, k = k_dist) + 
+##     te(temp_C_mean, precip_mm_sum, fert_N, treeage, bs = c(&quot;tp&quot;, 
+##         &quot;tp&quot;, &quot;tp&quot;, &quot;tp&quot;), k = c(5, 5, 5, 5)) + crop_unified + 
+##     s(field, bs = &quot;re&quot;)
+## 
+## Parametric coefficients:
+##                      Estimate Std. Error t value Pr(&gt;|t|)   
+## (Intercept)            0.8890     0.9303   0.956  0.33967   
+## crop_unifiedgrass      0.1996     1.1984   0.167  0.86778   
+## crop_unifiedmaize      0.2326     1.0471   0.222  0.82429   
+## crop_unifiedpotato    -2.5245     1.8274  -1.381  0.16765   
+## crop_unifiedrapeseed  -1.0962     0.3380  -3.243  0.00125 **
+## crop_unifiedrye       -3.2791     1.2632  -2.596  0.00966 **
+## crop_unifiedwheat      0.2217     0.2320   0.956  0.33961   
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Approximate significance of smooth terms:
+##                                                    edf Ref.df      F p-value
+## s(swf_fitted.tmat):L.swf_fitted              2.000e+00  2.000  5.925 0.00283
+## s(distance_to_tree_strip)                    4.752e+00  4.957 43.258 &lt; 2e-16
+## te(temp_C_mean,precip_mm_sum,fert_N,treeage) 1.987e+01 21.009  7.714 &lt; 2e-16
+## s(field)                                     8.726e-05  3.000  0.000 0.12825
+##                                                 
+## s(swf_fitted.tmat):L.swf_fitted              ** 
+## s(distance_to_tree_strip)                    ***
+## te(temp_C_mean,precip_mm_sum,fert_N,treeage) ***
+## s(field)                                        
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## R-sq.(adj) =  0.753   Deviance explained = 76.5%
+## -REML = 618.72  Scale est. = 0.40763   n = 647</code></pre>
+<pre class="r"><code>summary(model7)$r.sq</code></pre>
+<pre><code>## [1] 0.7527039</code></pre>
+<pre class="r"><code>summary(model7)$dev.expl</code></pre>
+<pre><code>## [1] 0.765191</code></pre>
+<pre class="r"><code>AIC(model7)</code></pre>
+<pre><code>## [1] 1292.906</code></pre>
 </div>
 </div>
 

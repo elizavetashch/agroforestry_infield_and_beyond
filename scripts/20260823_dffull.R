@@ -28,5 +28,11 @@ df <- df |>
   mutate(AFage = year - year_AFplanting)
 
 dffull <- left_join(df, soil, join_by(field == fields))
-write.csv(dffull, ".\\data\\AnalysisData\\20260823_full.csv", row.names = FALSE)
+
+dffull_0831 <- dffull |> unique()
+
+dffull_0831 <- dffull_0831 |> 
+  mutate(ID_nodist = gsub("_\\d+(?:\\.\\d+)?m_", "_", id))
+
+write.csv(dffull_0831, ".\\data\\AnalysisData\\20260831_full.csv", row.names = FALSE)
 

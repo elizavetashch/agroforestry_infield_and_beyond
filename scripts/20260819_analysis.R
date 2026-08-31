@@ -51,8 +51,8 @@ W_swf <- df |>
   arrange(id)
 
 id_order <- W_swf$id
-W_mat    <- as.matrix(W_swf[, -1])
-
+W_mat    <- as.matrix(W_swf[, -c(1,2)])
+grid     <- as.numeric(colnames(W_mat))   # 100 200 ... 1000
 # ============================================================================
 # (2) + (3) base data: one row per id, intrinsic variation + field design
 # ============================================================================
@@ -68,11 +68,10 @@ base <- df |>
 stopifnot(nrow(base) == nrow(W_mat))
 base$W_swf <- W_mat
 
-base$field        <- factor(base$field)
-base$year_AFplanting         <- factor(base$year_AFplanting)
-base$treeage         <- factor(base$treeage)
-base$crop_unified <- factor(base$crop_unified)
-base$harvestyear  <- factor(base$harvestyear)
+base$field<- factor(base$field)
+#base$year_AFplanting<- factor(base$year_AFplanting)
+#base$treeage<- factor(base$treeage)
+base$crop_unified<- factor(base$crop_unified)
 
 # ============================================================================
 # MODEL: scalar-on-function regression
@@ -95,6 +94,7 @@ k_cont  <- safe_k(base$l_contag,               5)
 k_ed    <- safe_k(base$l_ed,                   5)
 k_ai    <- safe_k(base$l_ai,                   5)
 k_tree  <- safe_k(base$treeage,                5)
+k_planting  <- safe_k(base$year_AFplanting,   5)
 
 model <- pfr(
   yield_tha ~
@@ -111,10 +111,9 @@ model <- pfr(
     s(l_ed,           bs = "tp", k = k_ed) +
     s(l_ai,           bs = "tp", k = k_ai) +
     s(treeage,        bs = "tp", k = k_tree) +
+    s(year_AFplanting,bs = "tp", k = k_planting) +
     crop_unified +
-    harvestyear +
-    s(field, bs = "re") +
-    s(plot,  bs = "re"),
+    s(field, bs = "re"),
   data   = base,
   method = "REML"
 )
@@ -123,4 +122,4 @@ summary(model)
 
 plot(model, select = 1, shade = TRUE)   # coefficient function beta(distance) for prop_swf
 plot(model, pages = 1, scale = 0)       # all smooth terms
-
+plot(model)

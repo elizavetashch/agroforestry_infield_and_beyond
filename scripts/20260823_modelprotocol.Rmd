@@ -422,7 +422,7 @@ predictors <- df |>
            crop_unified, fert_N, temp_C_mean, sun_MJ_m2_mean,
            precip_mm_sum, l_shdi, l_contag, l_ed, 
            treeage, AFage, 
-           prop_swf_within, clay) |>
+           prop_swf_within, clay, latitude, longitude) |>
   filter(id %in% id_order) |>
   slice(match(id_order, id))
 
@@ -475,10 +475,10 @@ k_to_check <- list(
 
 for (nm in names(k_to_check)) {
   k_val <- k_to_check[[nm]]
-  n_unique <- length(unique(predictors_fit[[nm]][!is.na(predictors_fit[[nm]])]))
+  n_unique <- length(unique(predictors[[nm]][!is.na(predictors[[nm]])]))
   cat(sprintf("%-25s k=%-3d unique=%-3d ", nm, k_val, n_unique))
   res <- tryCatch({
-    smoothCon(s(x, k = k_val), data = data.frame(x = predictors_fit[[nm]]))
+    smoothCon(s(x, k = k_val), data = data.frame(x = predictors[[nm]]))
     "OK"
   }, error = function(e) paste("FAILS:", conditionMessage(e)))
   cat(res, "\n")
@@ -556,12 +556,6 @@ AIC(model)
 
 
 
-
-
-
-
-
-
 ```{r model2-swf_mat}
 
 model2 <- pfr(
@@ -606,7 +600,6 @@ summary(model3)
 summary(model3)$r.sq
 summary(model3)$dev.expl
 AIC(model3)
-plot(model3)
 ```
 
 
@@ -636,6 +629,73 @@ summary(model4)
 summary(model4)$r.sq
 summary(model4)$dev.expl
 AIC(model4)
-plot(model4)
+```
+```{r model5-nosplines}
+
+
+model5 <- pfr(
+  yield_scaled ~
+    lf(swf_fitted, argvals = grid, bs = "ps", k = 15) +
+    s(distance_to_tree_strip, bs = "tp",k = k_dist) +
+    te(longitude, latitude, bs = c("tp", "tp"), k = c(5, 5)) +  
+    fert_N + treeage + crop_unified +
+
+    s(field, bs = "re"),
+  data   = predictors,
+  family = "gaussian",
+  method = "REML"
+)
+
+summary(model5)
+summary(model5)$r.sq
+summary(model5)$dev.expl
+AIC(model5)
+
+```
+
+
+```{r model6-diftensor}
+model6 <- pfr(
+  yield_scaled ~
+    lf(swf_fitted, argvals = grid, bs = "ps", k = 15) +
+    s(distance_to_tree_strip, bs = "tp",k = k_dist) +
+    te(temp_C_mean, precip_mm_sum, bs = c("tp", "tp"), k = c(5, 5)) +
+    fert_N + treeage + crop_unified +
+
+    s(field, bs = "re"),
+  data   = predictors,
+  family = "gaussian",
+  method = "REML"
+)
+
+summary(model6)
+summary(model6)$r.sq
+summary(model6)$dev.expl
+AIC(model6)
+
+
+```
+
+
+
+```{r model7-bigtensor}
+model7 <- pfr(
+  yield_scaled ~
+    lf(swf_fitted, argvals = grid, bs = "ps", k = 15) +
+    s(distance_to_tree_strip, bs = "tp",k = k_dist) +
+    te(temp_C_mean, precip_mm_sum, fert_N, treeage, bs = c("tp","tp","tp", "tp"), k = c(5, 5, 5, 5)) +
+    crop_unified +
+    s(field, bs = "re"),
+  data   = predictors,
+  family = "gaussian",
+  method = "REML"
+)
+
+summary(model7)
+summary(model7)$r.sq
+summary(model7)$dev.expl
+AIC(model7)
+
+
 ```
 
