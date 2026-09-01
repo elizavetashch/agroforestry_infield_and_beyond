@@ -1,0 +1,42 @@
+Linear mixed model fit by maximum likelihood . t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: yield_log ~ yield_scaled + distance_to_tree_strip + crop_unified +  
+    sun_MJ_m2_mean + precip_mm_sum + l_contag + AFage + clay +      longitude + (1 | field)
+   Data: df_fit
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+  -1685.0   -1588.7     861.5   -1723.0      1152 
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-11.1653  -0.2073   0.1170   0.4723   3.9004 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ field    (Intercept) 0.00000  0.0000  
+ Residual             0.01344  0.1159  
+Number of obs: 1171, groups:  field, 8
+
+Fixed effects:
+                         Estimate Std. Error         df t value Pr(>|t|)    
+(Intercept)             1.948e+00  1.809e-01  1.171e+03  10.768  < 2e-16 ***
+yield_scaled            3.832e-01  5.226e-03  1.171e+03  73.328  < 2e-16 ***
+distance_to_tree_strip  1.684e-03  4.580e-04  1.171e+03   3.678 0.000246 ***
+crop_unifiedgrass      -2.374e-02  2.297e-02  1.171e+03  -1.033 0.301659    
+crop_unifiedmaize      -3.610e-01  2.709e-02  1.171e+03 -13.326  < 2e-16 ***
+crop_unifiedoat        -2.160e-01  3.386e-02  1.171e+03  -6.379 2.56e-10 ***
+crop_unifiedpea        -2.843e-01  1.797e-02  1.171e+03 -15.817  < 2e-16 ***
+crop_unifiedpotato      1.788e-01  3.678e-02  1.171e+03   4.860 1.33e-06 ***
+crop_unifiedrapeseed   -1.084e-01  1.136e-02  1.171e+03  -9.550  < 2e-16 ***
+crop_unifiedrye         2.053e-01  2.906e-02  1.171e+03   7.065 2.74e-12 ***
+crop_unifiedwheat       7.850e-04  1.313e-02  1.171e+03   0.060 0.952317    
+sun_MJ_m2_mean         -9.071e-03  3.022e-03  1.171e+03  -3.002 0.002740 ** 
+precip_mm_sum           1.601e-03  5.624e-04  1.171e+03   2.847 0.004493 ** 
+l_contag               -2.676e-02  3.091e-03  1.171e+03  -8.656  < 2e-16 ***
+AFage                   9.241e-03  1.264e-03  1.171e+03   7.309 4.97e-13 ***
+clay                    5.380e-04  1.024e-04  1.171e+03   5.253 1.77e-07 ***
+longitude               3.982e-02  5.431e-03  1.171e+03   7.332 4.23e-13 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+optimizer (nloptwrap) convergence code: 0 (OK)
+boundary (singular) fit: see help('isSingular')
+

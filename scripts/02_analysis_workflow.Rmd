@@ -1,0 +1,621 @@
+---
+title: "Model: yield_tha ~ surrounding landscape + intrinsic variaton + field design"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(ggplot2)
+library(refund)
+library(mgcv)
+```
+
+# Contents 
+
+(1) Model Structure
+(1) Refund::prf Introduction to the function used
+(2) Data Exploration 
+(3) Model run
+(4) Validation and Verification
+
+# Model Structure 
+
+*yield_tha ~ landscape heterogeneity (swf) + intrinsic variaton + field design*
+
+Because the surrounding-landscape predictor is a curve rather than a
+single number, the response is modelled with a scalar-on-function
+regression (`refund::pfr`), which is a generalized additive model
+(`mgcv`) extended to accept functional covariates.
+
+
+
+
+This document analyses crop yield (`yield_tha`) in an agroforestry
+system as a function of three groups of predictors:
+
+1. **surrounding landscape** - the proportion of small woody features
+   (SWF) around the field, expressed as a *function* of distance from
+   the field boundary (100-1000 m, 100 m steps);
+2. **intrinsic variation** - the distance from the sampled plot to the
+   tree strip within the field;
+3. **field design** - fixed characteristics of each field/year
+   (climate, soil, landscape configuration, crop, tree age, planting
+   year).
+
+Because the surrounding-landscape predictor is a curve rather than a
+single number, the response is modelled with a scalar-on-function
+regression (`refund::pfr`), which is a generalized additive model
+(`mgcv`) extended to accept functional covariates.
+
+The data-exploration section below follows the structure recommended by
+Zuur et al. 2010:
+- outlier
+- distribution/homogeneity of the response
+- zero-inflation
+- collinearity 
+- relationships 
+- independence of observations.
+
+```{r data}
+df <- read.csv("C:/Users/Elizaveta/OneDrive - Universität Bayreuth/Dokumente/MasterThesis/MA_RProject/data/AnalysisData/20260819_AFswf.csv")
+
+df <- df |>
+  mutate(year_AFplanting = case_when(
+    field == "Dornburg"      ~ 2007,
+    field == "Forst"         ~ 2010,
+    field == "Gladbacherhof" ~ 2020,
+    field == "IhingerHof"    ~ 2008,
+    field == "Mariensee"     ~ 2008,
+    field == "Reiffenhausen" ~ 2011,
+    field == "Vechta"        ~ 2019,
+    field == "Wendhausen"    ~ 2008
+  )) |> 
+  mutate(AFage = year - year_AFplanting)
+
+fert_raw <- gsub("[\u2013\u2212]", "-", df$fertilization_rate_kg_n_p_k_ha_1_year_1)
+df$fert_N <- as.numeric(sub("^([0-9.]+).*", "\\1", fert_raw))
+df$fert_N[fert_raw == "no fertilization"] <- 0
+
+# one row per plot-year observation, for exploration of scalar variables
+base_explore <- df |>
+  distinct(id, field, year, yield_tha, distance_to_tree_strip,
+           crop_unified, area, fert_N, temp_C_mean, sun_MJ_m2_mean,
+           precip_mm_sum, l_shdi, l_contag, l_ed, l_ai,
+           mean_slope, min_slope, max_slope, treeage,
+           year_AFplanting, prop_swf_within)
+```
+
+# Data Exploration 
+
+## Distribution of the response variable: yield tha
+
+```{r distribution of yield}
+
+ggplot(df, aes(x = seq_along(yield_tha), y = yield_tha)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  theme_bw() +
+  labs(
+    x = "Observation",
+    y = "Yield (t/ha)"
+  )
+
+ggplot(df, aes(x = seq_along(yield_tha), y = yield_tha, color = crop_unified)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  theme_bw() +
+  labs(
+    x = "Observation",
+    y = "Yield (t/ha)"
+  )
+
+ggplot(df, aes(x = seq_along(yield_tha), y = yield_tha, color = distance_to_tree_strip)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  theme_bw() +
+  labs(
+    x = "Observation",
+    y = "Yield (t/ha)"
+  )
+
+
+```
+
+
+## Outliers
+
+Cleveland dotplots for every continuous variable (observation order on
+the y-axis, value on the x-axis) make isolated extreme values easy to
+spot without imposing a distributional assumption.
+
+```{r outliers, fig.height=8, fig.width=7}
+num_vars <- c("yield_tha", "distance_to_tree_strip", "fert_N",
+              "temp_C_mean", "sun_MJ_m2_mean", "precip_mm_sum",
+              "l_shdi", "l_contag", "l_ed", "l_ai",
+              "mean_slope", "treeage", "prop_swf_within")
+
+dotplot_data <- base_explore |>
+  select(all_of(num_vars)) |>
+  mutate(row = row_number()) |>
+  pivot_longer(-row, names_to = "variable", values_to = "value")
+
+ggplot(dotplot_data, aes(x = value, y = row)) +
+  geom_point(shape = 1, alpha = 0.5) +
+  facet_wrap(~variable, scales = "free_x") +
+  theme_bw() +
+  labs(y = "observation order", x = NULL,
+       title = "Cleveland dotplots for outlier screening")
+```
+
+Flag anything that sits noticeably apart from the bulk of the points in
+its panel; decide case by case whether it is a data-entry error (fix),
+a genuine extreme value (keep, but check its influence on the fitted
+model later), or an artefact of the extraction pipeline (e.g. a
+boundary raster cell with no woody-cover pixels).
+
+## Distribution / homogeneity of the response
+
+```{r response-dist, fig.width=6, fig.height=4}
+ggplot(base_explore, aes(x = yield_tha)) +
+  geom_histogram(bins = 30, colour = "white") +
+  theme_bw() +
+  labs(title = "Distribution of yield_tha")
+
+ggplot(base_explore, aes(x = crop_unified, y = yield_tha)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(title = "yield_tha by crop", x = NULL) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+`yield_tha` differs strongly by crop (as the boxplot and the model's
+parametric coefficients confirm), which is why `crop_unified` is kept
+as a fixed factor rather than pooled. Within-crop spread should look
+roughly comparable across fields/years for a Gaussian `pfr` to be an
+appropriate choice; strong heteroscedasticity by crop would motivate a
+`weights =` argument or a variance-modelling approach.
+
+## Zero-inflation
+
+```{r zero-check}
+sapply(base_explore[num_vars], function(x) mean(x == 0, na.rm = TRUE))
+```
+
+None of the continuous predictors or the response should show a
+disproportionate spike at zero (`fert_N` is expected to have a
+genuine, meaningful cluster at 0 for "no fertilization" plots - that is
+not zero-inflation in the statistical sense, just a real category, and
+is handled by the smooth term being able to flatten out near 0).
+
+## Collinearity among scalar predictors
+
+```{r collinearity, fig.width=7, fig.height=6}
+cor_mat <- base_explore |>
+  select(all_of(num_vars[-1])) |>   # drop the response
+  cor(use = "pairwise.complete.obs")
+
+round(cor_mat, 2)
+```
+
+Pay particular attention to `area`, `mean_slope`, `min_slope`,
+`max_slope`, `temp_C_mean`, `sun_MJ_m2_mean`, `precip_mm_sum`,
+`l_shdi`, `l_contag`, `l_ed`, `l_ai` - with only 8 fields, several of
+these are near-constant within a field and therefore highly correlated
+with field identity itself (see Section 5.3, concurvity). `area` and
+`mean_slope`/`min_slope`/`max_slope` are dropped from the model for
+exactly this reason: each has a single value per field.
+
+## Relationships between yield and candidate predictors
+
+```{r relationships, fig.width=8, fig.height=6}
+rel_data <- base_explore |>
+  select(yield_tha, distance_to_tree_strip, fert_N, temp_C_mean,
+         precip_mm_sum, l_shdi, treeage, crop_unified) |>
+  pivot_longer(-c(yield_tha, crop_unified), names_to = "variable", values_to = "value")
+
+ggplot(rel_data, aes(x = value, y = yield_tha)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_wrap(~ crop_unified + variable, scales = "free") +
+  theme_bw()
+```
+
+```{r relationships-swf, fig.width=6, fig.height=4}
+df |>
+  select(id, distance, prop_swf) |>
+  distinct() |>
+  ggplot(aes(x = distance, y = prop_swf)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "loess", se = FALSE) +
+  theme_bw() +
+  labs(title = "prop_swf as a function of distance from the field boundary")
+```
+
+Loess curves that are clearly non-straight (as expected for
+`distance_to_tree_strip` and for `prop_swf` vs. `distance`) are the
+empirical justification for modelling these relationships with
+penalized smooths / a functional term rather than linear terms.
+
+## Independence of observations
+
+```{r independence}
+table(base_explore$field)
+base_explore |> count(field, year) |> tidyr::pivot_wider(names_from = year, values_from = n)
+```
+
+Multiple plots per field and multiple years per field mean observations
+are not independent at the field level (and possibly the plot level
+across years). This nesting is why the model includes `s(field,
+bs = "re")` rather than treating all 647 rows as independent
+replicates; if a given `id`/plot recurs across years, consider adding a
+plot-level random effect as well (see Section 5.5).
+
+# Variable Overview
+
+| Variable | Description | Unit | Role in model |
+|---|---|---|---|
+| `yield_tha` | Crop yield | t/ha | **Scalar response** |
+| `W_swf` (built from `distance`, `prop_swf`) | Proportion of small woody features (SWF) in the annulus at each distance from the field boundary | proportion (0-1), function of distance (m) | **Functional predictor** (continuous), entered via `lf()` |
+| `distance_to_tree_strip` | Distance from the sampled plot to the nearest agroforestry tree strip | m | **Continuous scalar predictor**, smooth term |
+| `prop_swf_within` | Proportion of SWF inside the field's own circular footprint (radius = boundary_min) | proportion (0-1) | Continuous scalar predictor (field design context; consider as smooth or covariate) |
+| `crop_unified` | Harmonised crop type grown that year | category (7 levels: grass, maize, potato, rapeseed, rye, wheat, ...) | **Categorical predictor**, parametric factor |
+| `area` | Field area | m^2 (or ha, check source) | Field design - dropped (1 unique value per field, confounded with field RE) |
+| `fert_N` | Nitrogen fertilization rate (parsed from the N-P-K string; "no fertilization" = 0) | kg N ha^-1 yr^-1 | **Continuous scalar predictor**, smooth term |
+| `temp_C_mean` | Mean growing-season temperature | deg C | **Continuous scalar predictor**, smooth term |
+| `sun_MJ_m2_mean` | Mean solar radiation | MJ/m^2 | **Continuous scalar predictor**, smooth term |
+| `precip_mm_sum` | Total precipitation | mm | **Continuous scalar predictor**, smooth term |
+| `l_shdi` | Shannon diversity index of the surrounding landscape (FRAGSTATS) | index | **Continuous scalar predictor**, smooth term |
+| `l_contag` | Contagion index of the surrounding landscape | index | **Continuous scalar predictor**, smooth term |
+| `l_ed` | Edge density of the surrounding landscape | m/ha | **Continuous scalar predictor**, smooth term |
+| `l_ai` | Aggregation index of the surrounding landscape | index | **Continuous scalar predictor**, smooth term |
+| `mean_slope`, `min_slope`, `max_slope` | Field topographic slope statistics | degrees | Field design - `mean_slope` dropped (1 value per field, confounded with field RE); `min_slope`/`max_slope` currently unused, candidates for the same treatment |
+| `treeage` | Age of the agroforestry tree strip in the given year | years | **Continuous scalar predictor**, smooth term |
+| `year_AFplanting` | Year the agroforestry system was planted at that field | year (categorical, 8 levels, 1 per field) | Field design - candidate for `factor()`/smooth; near-collinear with `field` |
+| `field` | Field identifier | category (8 levels) | **Random-effect grouping factor**, `s(field, bs = "re")` |
+| `id` | Unique plot-year observation identifier | - | Row/observation key, not a covariate |
+| `year` | Calendar year of observation | year | Available for a year effect / repeated-measures structure, not currently in the model |
+| `distance` | Distance from field boundary at which `prop_swf` was measured | m (100-1000, step 100) | Domain (`argvals`) of the functional predictor `W_swf`, not a covariate itself |
+
+# Model Specification
+
+## Building the functional covariate
+
+`prop_swf` is recorded at 10 fixed distances (100-1000 m, 100 m steps)
+per `id`. Pivoting to wide format gives one row per `id` and one column
+per distance - this matrix is the discretised functional predictor
+`W_swf(distance)`, and `grid` is its domain.
+
+```{r build-W}
+W_swf <- df |>
+  dplyr::select(id, distance, swf_year, prop_swf) |>
+  unique() |>
+  pivot_wider(names_from = distance, values_from = prop_swf) |>
+  arrange(id)
+
+id_order <- W_swf$id
+W_mat    <- as.matrix(W_swf[, -c(1, 2)])
+grid     <- as.numeric(colnames(W_mat))
+
+stopifnot(!anyNA(grid), length(grid) == ncol(W_mat))
+```
+
+## Building the scalar dataset
+
+One row per `id`, aligned exactly to the row order of `W_mat`.
+
+```{r build-base}
+base <- df |>
+  distinct(id, field, year, yield_tha, distance_to_tree_strip,
+           crop_unified, area, fert_N, temp_C_mean, sun_MJ_m2_mean,
+           precip_mm_sum, l_shdi, l_contag, l_ed, l_ai,
+           mean_slope, min_slope, max_slope, treeage,
+           year_AFplanting, prop_swf_within) |>
+  filter(id %in% id_order) |>
+  slice(match(id_order, id))
+
+stopifnot(nrow(base) == nrow(W_mat))
+base$W_swf <- W_mat
+
+base$field         <- factor(base$field)
+base$crop_unified  <- factor(base$crop_unified)
+```
+
+## Adaptive basis dimensions
+
+`safe_k()` caps every smooth's basis dimension (`k`) at
+`(number of unique values - 1)` of its own covariate, so that
+`smooth.construct` can never fail regardless of how listwise deletion
+(NAs anywhere in the formula) thins the fitting sample.
+
+```{r safe-k}
+safe_k <- function(x, k_wanted) {
+  min(k_wanted, length(unique(x[!is.na(x)])) - 1)
+}
+
+k_dist  <- safe_k(base$distance_to_tree_strip, 6)
+k_fertN <- safe_k(base$fert_N,                 5)
+k_temp  <- safe_k(base$temp_C_mean,            5)
+k_sun   <- safe_k(base$sun_MJ_m2_mean,         5)
+k_prec  <- safe_k(base$precip_mm_sum,          5)
+k_shdi  <- safe_k(base$l_shdi,                 5)
+k_cont  <- safe_k(base$l_contag,               5)
+k_ed    <- safe_k(base$l_ed,                   5)
+k_ai    <- safe_k(base$l_ai,                   5)
+k_tree  <- safe_k(base$treeage,                5)
+```
+
+## The model
+
+```{r fit-model}
+model <- pfr(
+  yield_tha ~
+    lf(W_swf, argvals = grid, bs = "ps", k = 15) +      # (1) surrounding landscape
+    s(distance_to_tree_strip, bs = "tp", k = k_dist) +   # (2) intrinsic variation
+    s(fert_N,         bs = "tp", k = k_fertN) +    # thin plate regression splines
+    s(temp_C_mean,    bs = "tp", k = k_temp) +
+    s(sun_MJ_m2_mean, bs = "tp", k = k_sun) +
+    s(precip_mm_sum,  bs = "tp", k = k_prec) +
+    s(l_shdi,         bs = "tp", k = k_shdi) +
+    s(l_contag,       bs = "tp", k = k_cont) +
+    s(l_ed,           bs = "tp", k = k_ed) +
+    s(l_ai,           bs = "tp", k = k_ai) +
+    s(treeage,        bs = "tp", k = k_tree) +
+    crop_unified +
+    s(field, bs = "re"), # random effects 
+  data   = base,
+  method = "REML"
+)
+
+summary(model)
+```
+
+Term-by-term rationale:
+
+- `lf(W_swf, argvals = grid, bs = "ps", k = 15)` - the surrounding
+  landscape term. Estimates a smooth coefficient function beta(distance)
+  over the 100-1000 m domain using a penalized B-spline (`bs = "ps"`)
+  basis; `k = 15` is generous relative to the 10 observed distances but
+  is fine because the roughness penalty (chosen by REML) controls the
+  effective wiggliness, not `k` itself.
+- `s(distance_to_tree_strip, bs = "tp", k = k_dist)` - intrinsic
+  variation. A thin-plate smooth lets yield respond nonlinearly to
+  proximity to the tree strip, consistent with the competition-zone
+  literature (Swieter et al. 2019).
+  I THINK HERE ONE CAN JUST TAKE A LOG SMOOTH 
+THERE IS NO INDICATION THAT THESE EFFECTS ARE NON LINEAR SO I WOULD TAKE THEM LINEARLY 
+The block of `s(..., bs = "tp", k = ...)` terms for `fert_N`,
+  climate normals, and landscape-configuration indices represents field
+  design as smooth (not necessarily linear) scalar effects.
+- `crop_unified` - parametric factor; crop identity has a large,
+  roughly additive effect on yield and does not need smoothing.
+- `s(field, bs = "re")` - random intercept for field, absorbing
+  unmodelled, field-specific variation and acknowledging that
+  observations within a field are not independent.
+
+# Model Validation and Verification
+
+## Basis dimension check (k-index)
+
+```{r gam-check, fig.width=7, fig.height=7}
+gam.check(model)
+```
+
+Look at the `k-index` column: a value well below 1 together with a
+low p-value for a given smooth means `k` may be too small (the smooth
+is being forced to be smoother than the data support) and should be
+increased (subject to `safe_k`'s ceiling); values around/above 1 are
+fine.
+
+## Residual diagnostics
+
+```{r residual-diagnostics, fig.width=8, fig.height=6}
+res <- residuals(model)
+fit <- fitted(model)
+
+par(mfrow = c(2, 2))
+plot(fit, res, main = "Residuals vs fitted", xlab = "Fitted", ylab = "Residuals")
+abline(h = 0, col = "red")
+hist(res, main = "Residual distribution", xlab = "Residuals")
+qqnorm(res); qqline(res, col = "red")
+# plot(base$distance_to_tree_strip, res,
+#      main = "Residuals vs distance_to_tree_strip",
+#      xlab = "distance_to_tree_strip", ylab = "Residuals")
+# abline(h = 0, col = "red")
+# par(mfrow = c(1, 1))
+```
+
+Check specifically for: (i) trumpet/fan shape in residuals-vs-fitted
+(heteroscedasticity, possibly by crop - consider `s(fitted, by =
+crop_unified)`-style variance modelling or a Gamma/log-link family if
+present); (ii) heavy tails in the Q-Q plot (consider a robust family or
+investigate the flagged outliers from Section 2.1); (iii) any remaining
+pattern of residuals against `distance_to_tree_strip` or fitted values,
+which would indicate the smooth is under- or over-fitting.
+
+## Residuals by field and by year (checks the random-effect structure)
+
+```{r residuals-by-group, fig.width=7, fig.height=4}
+# resid_df <- base |> mutate(resid = res)
+# 
+# ggplot(resid_df, aes(x = field, y = resid)) +
+#   geom_boxplot() +
+#   geom_hline(yintercept = 0, colour = "red") +
+#   theme_bw() +
+#   labs(title = "Residuals by field") +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# 
+# ggplot(resid_df, aes(x = factor(year), y = resid)) +
+#   geom_boxplot() +
+#   geom_hline(yintercept = 0, colour = "red") +
+#   theme_bw() +
+#   labs(title = "Residuals by year", x = "year")
+```
+
+If residuals still show a systematic offset by field, `s(field,
+bs = "re")` is not fully doing its job (often because of the
+concurvity issue described next) and the fixed effects should be
+simplified. A systematic pattern by year suggests adding a year term.
+
+## Concurvity (the GAM analogue of collinearity)
+
+```{r concurvity}
+concurvity(model, full = TRUE)
+concurvity(model, full = FALSE)
+```
+
+Given that several field design smooths are near-constant within a
+field (Section 2.4), expect high concurvity between those terms and
+`s(field, bs = "re")`. `full = FALSE` shows pairwise concurvity and
+helps identify which specific pair of terms is problematic. If
+concurvity between, e.g., `s(temp_C_mean)` and `s(field)` is high,
+report this explicitly and consider the simplified model discussed in
+`01_model_choice_rationale.txt` (Section 2) as a robustness check.
+
+## Influence / leave-one-field-out sensitivity
+
+```{r loo-field, eval=FALSE}
+# refit dropping each field once, compare beta(distance) for W_swf
+fields <- levels(base$field)
+loo_coefs <- lapply(fields, function(f) {
+  m <- update(model, data = base[base$field != f, ])
+  coef(m, n = length(grid))
+})
+```
+
+With only 8 fields, a leave-one-field-out refit is cheap and directly
+answers "is the estimated surrounding-landscape effect (or the
+distance-to-tree-strip effect) driven by a single field?" - important
+given the concurvity concerns above. Compare the estimated beta(distance)
+curve (and its confidence band) across the 8 refits, e.g. by overlaying
+`coef(m, n = ...)` for each fold.
+
+## Reported fit statistics
+
+```{r fit-stats}
+summary(model)$r.sq
+summary(model)$dev.expl
+AIC(model)
+```
+
+Report adjusted R^2, deviance explained, and REML/AIC alongside the
+diagnostics above - a high R^2 (as in the current model, ~0.76) is not
+by itself evidence that the model is correctly specified if concurvity
+is high; the diagnostics in this section are what establishes that.
+
+
+
+```{r PCA}
+library(dplyr)
+library(tidyr)
+library(FactoMineR)
+library(factoextra)
+library(ggplot2)
+
+W_swf <- df |>
+  dplyr::select(id, distance, prop_swf) |>
+  unique() |>
+  filter(distance %in% c(100, 500, 1000)) |>
+  pivot_wider(names_from = distance, values_from = prop_swf, names_prefix = "swf_") |>
+  arrange(id)
+
+pca_data <- df |>
+  distinct(id, yield_tha, distance_to_tree_strip, crop_unified) |>
+  inner_join(W_swf, by = "id") |>
+  na.omit()
+
+pca_res <- PCA(pca_data |> select(-id),
+                quali.sup = which(names(pca_data |> select(-id)) == "crop_unified"),
+                quanti.sup = which(names(pca_data |> select(-id)) == "yield_tha"),
+                graph = FALSE)
+
+get_eigenvalue(pca_res)
+
+ind_coord <- as.data.frame(pca_res$ind$coord[, 1:2])
+colnames(ind_coord) <- c("Dim1", "Dim2")
+ind_coord$yield_scaled <- as.numeric(scale(pca_data$yield_tha))
+ind_coord$crop_unified <- pca_data$crop_unified
+
+var_coord <- as.data.frame(pca_res$var$coord[, 1:2])
+colnames(var_coord) <- c("Dim1", "Dim2")
+var_coord$label <- rownames(var_coord)
+
+scale_f <- 0.8 * max(abs(ind_coord[, 1:2])) / max(abs(var_coord[, 1:2]))
+
+ggplot() +
+  geom_point(data = ind_coord,
+             aes(x = Dim1, y = Dim2, color = yield_scaled, shape = crop_unified),
+             size = 2.5) +
+  geom_segment(data = var_coord,
+               aes(x = 0, y = 0, xend = Dim1 * scale_f, yend = Dim2 * scale_f),
+               arrow = arrow(length = unit(0.2, "cm")), color = "black") +
+  geom_text(data = var_coord,
+            aes(x = Dim1 * scale_f * 1.1, y = Dim2 * scale_f * 1.1, label = label),
+            size = 3.5) +
+  scale_color_gradient2(low = "#2c7fb8", mid = "#ffffbf", high = "#d7191c",
+                         midpoint = 0) +
+  theme_minimal() +
+  labs(x = "Dim1", y = "Dim2", color = "yield_scaled", shape = "crop") +
+  theme(panel.grid.minor = element_blank())
+
+```
+
+
+```{r}
+
+swf_long <- df |>
+  dplyr::select(id, field, distance, prop_swf) |>
+  unique()
+
+swf_wide <- swf_long |>
+  tidyr::pivot_wider(names_from = distance, values_from = prop_swf) |>
+  arrange(id)
+
+grid <- as.numeric(names(swf_wide)[-c(1, 2)])
+Y_swf <- as.matrix(swf_wide[, -c(1, 2)])
+field_id <- df |> distinct(id, field) |> arrange(id) |> pull(field)
+
+swf_model <- pffr(
+  Y_swf ~ s(field_id, bs = "re"),
+  yind = grid,
+  data = list(Y_swf = Y_swf, field_id = factor(field_id)),
+  family = binomial()
+)
+
+summary(swf_model)
+plot(swf_model)
+
+```
+```{r}
+fitted_swf <- fitted(swf_model)
+rownames(fitted_swf) <- swf_wide$id
+
+W_smooth <- fitted_swf[match(id_order, rownames(fitted_swf)), ]
+
+base$W_swf <- W_smooth
+
+model <- pfr(
+  yield_tha ~
+    lf(W_swf, argvals = grid, bs = "ps", k = 15) +
+    s(distance_to_tree_strip, bs = "tp", k = k_dist) +
+    s(fert_N,         bs = "tp", k = k_fertN) +
+    s(temp_C_mean,    bs = "tp", k = k_temp) +
+    s(sun_MJ_m2_mean, bs = "tp", k = k_sun) +
+    s(precip_mm_sum,  bs = "tp", k = k_prec) +
+    s(l_shdi,         bs = "tp", k = k_shdi) +
+    s(l_contag,       bs = "tp", k = k_cont) +
+    s(l_ed,           bs = "tp", k = k_ed) +
+    s(l_ai,           bs = "tp", k = k_ai) +
+    s(treeage,        bs = "tp", k = k_tree) +
+    crop_unified +
+    s(field, bs = "re"),
+  data   = base,
+  method = "REML"
+)
+
+summary(model)
+```
+
