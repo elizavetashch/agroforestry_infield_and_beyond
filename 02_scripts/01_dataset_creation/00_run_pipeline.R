@@ -61,6 +61,10 @@ setwd("C:\\Users\\Elizaveta\\OneDrive - Universität Bayreuth\\Dokumente\\Master
 if (RUN_SOILTEXTURE)    source("02_scripts/01_dataset_creation/07_soiltexture.R",     local = TRUE)
 
 setwd("C:\\Users\\Elizaveta\\OneDrive - Universität Bayreuth\\Dokumente\\MasterThesis\\MA_RGit_agroforestry_infield_and_beyond")
+
+source("02_scripts/01_dataset_creation/08_finalmerge.R",     local = TRUE)
+
 writeLines(paste("Last update:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),file.path(ANALYSIS_DIR, "last_update.txt"))
+
 
 message("Pipeline complete. Final dataset: 01_Data/dffinal_20260909.csv")

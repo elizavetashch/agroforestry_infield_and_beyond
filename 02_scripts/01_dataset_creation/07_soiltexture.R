@@ -59,11 +59,4 @@ result <- bind_cols(
 
 write_csv(result, "01_Data/AnalysisData/SoilGrids/soiltexture.csv")
 
-AF_swf <- read_csv('01_Data/AnalysisData/AF_swf.csv')
-soil   <- read_csv('01_Data/AnalysisData/SoilGrids/soiltexture.csv')
-final  <- left_join(AF_swf, soil, by = 'field')
-
-
-write_csv(final, file.path(paste0("01_Data/dffinal_", format(Sys.Date(), "%Y%m%d"), ".csv")))
-
 message("Step 7 complete — 01_Data/AnalysisData/SoilGrids/soiltexture.csv  (", nrow(result), " rows)")
