@@ -195,10 +195,79 @@ climate_pca <- data.frame(id = climate$id,PC1_c = data.pca_c$scores[, 1])
 z <- z |> dplyr::left_join(landscape_pca, by = "id")
 z <- z |> dplyr::left_join(soil_pca, by = "id")
 z <- z |> dplyr::left_join(climate_pca, by = "id")
-
+z <- z |> mutate(year_num = as.numeric(year))
 
 # PCA TO MODELS -----------------------------------------------------------
 plot(z$yield_log~z$distance_log )
+
+
+# m0 ----------------------------------------------------------------------
+
+
+m0 <- gam(
+  yield_log ~ 
+    PC1_c + PC1_l + PC1_s + 
+    mean_slope + treeage + AFage + 
+    s(crop_unified, bs = "re") + 
+    te(lat, long, year_num),
+  data = z,
+  method = "REML"
+)
+
+summary(m0)
+
+
+m0_dist <- gam(
+  yield_log ~ 
+    s(log(distance_to_tree_strip), k =3)+
+    PC1_c + PC1_l + PC1_s + 
+    mean_slope + treeage + AFage + 
+    s(crop_unified,distance_to_tree_strip, bs = "re") + 
+    te(lat, long, year_num),
+  data = z,
+  method = "REML"
+)
+
+summary(m0_dist)
+AIC(m0_dist)
+
+
+
+
+
+m0_pfr <- pfr(
+  yield_log ~
+    lf(swf_matrix, argvals = swf_argvals, k = 3) +
+    s(log(distance_to_tree_strip), k =3)+
+    PC1_c + PC1_l + PC1_s + 
+    mean_slope + treeage + AFage + 
+    s(crop_unified,distance_to_tree_strip, bs = "re") + 
+    te(lat, long, year_num),
+  data   = z_swf,
+  method = "REML"
+)
+
+summary(m0_pfr)
+AIC(m0_pfr)
+
+
+
+
+m0_f <- gam(
+  yield_log ~ 
+    PC1_c + PC1_l + PC1_s + fert_N + 
+    mean_slope + treeage + AFage + 
+    s(crop_unified, bs = "re") + 
+    te(lat, long, year_num),
+  data = z,
+  method = "REML"
+)
+
+summary(m0_f)
+plot(m0_f, residuals = TRUE)
+gam.check(m0_f)
+
+AIC(m0_f)
 
 
 # m1 ----------------------------------------------------------------------
@@ -326,7 +395,7 @@ dispersion
 
 # m4 ----------------------------------------------------------------------
 
-z <- z |> mutate(year_num = as.numeric(year))
+
 m4 <- gam(
   yield_log ~ s(log(distance_to_tree_strip), k = 3) + s(prop_swf_within)+ PC1_l + PC1_s + PC1_c + s(fert_N) +
     s(crop_unified,distance_to_tree_strip, bs = "re") + 
@@ -428,23 +497,14 @@ m_int1 <- pfr(
 )
 
 
-
-z_swf <- z_swf |>
-  mutate(swf_x_dist = prop_swf_within * log(distance_to_tree_strip))
+swf_x_dist <- swf_matrix * log(z_swf$distance_to_tree_strip)
+swf_x_prop_dist <- swf_matrix * z_swf$prop_swf_within * log(z_swf$distance_to_tree_strip)
 
 m_int2 <- pfr(
   yield_log ~
-    lf(swf_matrix,
-       argvals = swf_argvals,
-       k       = 8) +                         # main functional effect
-    lf(swf_matrix,
-       argvals = swf_argvals,
-       by      = prop_swf_within,             # 2-way: field-level SWF x curve
-       k       = 8) +
-    lf(swf_matrix,
-       argvals = swf_argvals,
-       by      = swf_x_dist,                  # 3-way: adds distance-to-strip
-       k       = 8) +
+    lf(swf_matrix,      argvals = swf_argvals, k = 8) +
+    lf(swf_x_prop,      argvals = swf_argvals, k = 8) +
+    lf(swf_x_prop_dist, argvals = swf_argvals, k = 8) +
     s(log(distance_to_tree_strip), k = 3) +
     s(prop_swf_within) +
     s(l_shdi) +
@@ -455,3 +515,36 @@ m_int2 <- pfr(
   data   = z_swf,
   method = "REML"
 )
+
+summary(m_int2)
+AIC(m3_swf_functional, m_int1, m_int2)
+library(gratia)
+draw(m_int1)
+
+
+# m5 monster model --------------------------------------------------------
+
+
+m5 <- pfr(
+  yield_log ~
+    lf(swf_matrix,      argvals = swf_argvals, k = 8) +
+    lf(swf_x_prop,      argvals = swf_argvals, k = 8) +
+    lf(swf_x_prop_dist, argvals = swf_argvals, k = 8) +
+    s(log(distance_to_tree_strip), k = 3) +
+    s(prop_swf_within) +
+    PC1_l +
+    s(fert_N) +
+    PC1_s + PC1_c +
+    s(crop_unified, distance_to_tree_strip, bs = "re") +
+    s(field, bs = "re") +
+    s(year,  bs = "re"),
+  data   = z_swf,
+  method = "REML"
+)
+
+summary(m5)
+
+
+# m6 ----------------------------------------------------------------------
+
+gitcreds::gitcreds_set()
