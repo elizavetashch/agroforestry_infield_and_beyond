@@ -131,6 +131,11 @@ swf_mat <- mod_data |>
 summary(swf_mat)
 
 
+# write csv ---------------------------------------------------------------
+
+write.csv(mod_data, "01_Data/20260920_moddata.csv", row.names = FALSE)
+write.csv(swf_mat, "01_Data/20260920_swf_mat.csv", row.names = FALSE)
+
 # model pfr -------------------------------------------------------------------
 
 D <- as.numeric(scale(
@@ -141,6 +146,9 @@ D <- as.numeric(scale(
 
 swf_D <- swf_mat * D
 termsnames <- c("swf", "swfD", "distpath", "distnear", "disttreeage", "logAFage", "climate", "soil", "shdi", "edge", "field", "year")
+
+
+
 m_pfr_int <- pfr(
   yield_tha ~
     lf(swf_mat, argvals = swf_argvals, k = 3) +
