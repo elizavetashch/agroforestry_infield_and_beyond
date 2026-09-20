@@ -1,0 +1,21 @@
+name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
+af_swf_file|stem|0db66e89a694116a|da057f7141af5217|80aed4f2255ea5c1|-673155196|C:/Users/Elizaveta/OneDrive - Universität Bayreuth/Dokumente/MasterThesis/MA_RGit_agroforestry_infield_and_beyond/01_Data/AF_swf.csv|t20716.3384607204s|s9847244b|9847244|file|local|vector|||3.25||
+gg_beta0_curve|function|533136977be97b41
+join_mod_data|function|f30fb579513edbd0
+add_pca_scores|function|5d6380bafcaae63a
+fit_pfr_interaction|function|30a76ab6ae231447
+fit_pfr_base|function|ee3f4fee3db7c982
+fit_gam_full|function|0dc42f6b6df3ff3f
+gg_beta_surface|function|a159f424b78dbc7b
+gg_swf_distance_effect|function|41f255083329aaa9
+gg_term_variance|function|f78a6917c97107b8
+build_swf_inputs|function|5fcbdb0a8f7eee7e
+PFR_INT_TERM_LABELS|object|d51b9e2e721e38af
+run_gam_diagnostics|function|bed1e74318c902bc
+gg_swf_main_effect|function|28acc2863b54569c
+prepare_dflong|function|405378457b058af6
+compare_aic|function|979704f08c0cfea7
+AF_SWF_FILE|object|10ba24daf595ff44
+prepare_swf_data|function|a032163d6ad5895b
+compute_term_variance|function|754dd0be1527426b
+df_raw|stem||1c54c998a657b150|bb913a0c8e975e4a|-796806726||t20716.5427561157s||0|qs|local|vector|||||Error storing output: there is no package called 'qs2'

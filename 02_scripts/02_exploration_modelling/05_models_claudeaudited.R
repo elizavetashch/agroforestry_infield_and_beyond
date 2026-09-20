@@ -92,7 +92,7 @@ x   <- df |> distinct(field, year, crop_unified, distance_to_tree_strip, yield_t
 xs  <- df |> distinct(field, year, crop_unified, distance_to_tree_strip, yield_tha, ID_nodist, swf_year)
 
 z <- df |>
-  select(-c("radius", "distance", "radius.x", "radius.y", "prop_swf", "swf_year")) |>
+  #select(-c("radius", "distance", "radius.x", "radius.y", "prop_swf", "swf_year")) |>
   distinct()
 
 nrow(xs)  # expected 1171
