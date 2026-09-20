@@ -49,7 +49,17 @@ fieldpalette <- c(
 
 
 # Load & prepare data -----------------------------------------------------
-df <- read.csv("01_Data/dffinal_20260909.csv")
+
+annulus_all  <- read_csv(here::here("01_Data/AnalysisData/SWF/swf_annulus_by_distance.csv"))
+interior_all  <- read_csv(here::here("01_Data/AnalysisData/SWF/swf_within_field.csv"))
+
+# there are 80 values for small woody features
+# for every field x year combination there are 10 unique values 
+# so if you make a funcition for the field x year combination 
+# in describes exactly the function of the small woody features 
+# around this particular field in this particular year. 
+
+df <- read.csv(here::here("01_Data/dffinal_20260916.csv"))
 
 df <- df |>
   mutate(
@@ -270,6 +280,18 @@ m0 <- gam(
 )
 summary(m0)
 
+m0_re <- gam(
+  yield_log ~
+    PC1_c + PC1_l + PC1_s +
+    mean_slope + treeage + AFage +
+    s(crop_unified, bs = "re") +
+    s(field, bs = "re"),   # [S1] unified argument order
+    s(year, bs = "re"), 
+  data   = z,
+  method = "REML"
+)
+summary(m0)
+
 
 # m0_dist — baseline + log distance --------------------------------------
 m0_dist <- gam(
@@ -279,7 +301,7 @@ m0_dist <- gam(
     mean_slope + treeage + AFage +
     # [S2] s(crop, dist, bs="re") = random slope of distance per crop level
     s(crop_unified, distance_to_tree_strip, bs = "re") +
-    te(lat, long, year_num),
+    te((lat, long), year_num), # lat long has to be grouped
   data   = z,
   method = "REML"
 )
@@ -479,7 +501,7 @@ m4_dev_expl <- summary(m4)$dev.expl    # deviance explained
 m_int1 <- pfr(
   yield_log ~
     lf(swf_matrix,  argvals = swf_argvals, k = 8) +
-    lf(swf_x_prop,  argvals = swf_argvals, k = 8) +
+    lf(swf_x_fied,  argvals = swf_argvals, k = 8) +
     s(log(distance_to_tree_strip), k = 3) +
     s(l_shdi) +
     PC1_s + PC1_c +
@@ -495,8 +517,8 @@ summary(m_int1)
 m_int2 <- pfr(
   yield_log ~
     lf(swf_matrix,      argvals = swf_argvals, k = 8) +
-    lf(swf_x_prop,      argvals = swf_argvals, k = 8) +
-    lf(swf_x_prop_dist, argvals = swf_argvals, k = 8) +
+    lf(swf_x_field,      argvals = swf_argvals, k = 8) +
+    lf(swf_x_field_distyield, argvals = swf_argvals, k = 8) +
     s(log(distance_to_tree_strip), k = 3) +
     s(prop_swf_within) +
     s(l_shdi) +
@@ -530,6 +552,22 @@ m5 <- pfr(
 )
 summary(m5)
 
+m5_1409 <- pfr(
+  yield_log ~
+    lf(swf_matrix,      argvals = swf_argvals, k = 8) +
+    #lf(swf_x_prop,      argvals = swf_argvals, k = 8) + # the interaction alone or + main effects
+    # lf(swf_x_prop_dist, argvals = swf_argvals, k = 8) +
+    s(log(distance_to_tree_strip), k = 3) +
+    s(prop_swf_within) +
+    PC1_l +
+    s(fert_N) +
+    PC1_s + PC1_c +
+    s(crop_unified, distance_to_tree_strip, bs = "re") +
+    s(field, bs = "re") +
+    s(year,  bs = "re"),
+  data   = z_swf,
+  method = "REML"
+)
 
 # Model comparison --------------------------------------------------------
 

@@ -27,7 +27,7 @@ RUN_LULC_METRICS    <- TRUE   # Step 4b: ~5  min — landscape metrics
 RUN_LULC_MERGE      <- TRUE   # Step 4c: <1  min — joins metrics to dataset
 RUN_SLOPE           <- TRUE   # Step 5: <1  min
 RUN_SWF_RASTERS     <- TRUE   # Step 6a: ~10 min — annulus extraction (one-time)
-RUN_SWF_MERGE       <- TRUE   # Step 6b: <1  min
+RUN_SWF_MERGE       <- FALSE   #  set to FALSE because there is no need to merge with swf
 RUN_SOILTEXTURE     <- TRUE   # Step 7: <1  min
 
 # ---- Shared paths (edit here if your project root differs) -----------------
@@ -44,25 +44,28 @@ dir.create("01_Data\\AnalysisData\\swf",         recursive = TRUE, showWarnings 
 # Hence, if only one step has been updated - silence everything that comes before
 # by setting the steps to FALSE and rerun only the up-following part of the analysis. 
 
-if (RUN_SINGLE_FIELDS)   source("02_scripts/01_dataset_creation/01_single_fields.R",    local = TRUE)
-setwd("C:\\Users\\Elizaveta\\OneDrive - Universität Bayreuth\\Dokumente\\MasterThesis\\MA_RGit_agroforestry_infield_and_beyond")
-if (RUN_MERGE_DATASETS) source("02_scripts/01_dataset_creation/02_merge_datasets.R",  local = TRUE)
-setwd("C:\\Users\\Elizaveta\\OneDrive - Universität Bayreuth\\Dokumente\\MasterThesis\\MA_RGit_agroforestry_infield_and_beyond")
-if (RUN_CLIMATE)        source("02_scripts/01_dataset_creation/03_climate.R",         local = TRUE)
-setwd("C:\\Users\\Elizaveta\\OneDrive - Universität Bayreuth\\Dokumente\\MasterThesis\\MA_RGit_agroforestry_infield_and_beyond")
+if (RUN_SINGLE_FIELDS)   source(here::here("02_scripts/01_dataset_creation/01_single_fields.R"),local = TRUE)
+
+
+
+if (RUN_MERGE_DATASETS) source(here::here("02_scripts/01_dataset_creation/02_merge_datasets.R"), local = TRUE)
+
+if (RUN_MERGE_DATASETS) source(here::here("02_scripts/01_dataset_creation/02_merge_datasets.R"),  local = TRUE)
+
+if (RUN_CLIMATE)        source(here::here("02_scripts/01_dataset_creation/03_climate.R"),         local = TRUE)
+
 if (any(RUN_LULC_RASTERS, RUN_LULC_METRICS, RUN_LULC_MERGE))
-                        source("02_scripts/01_dataset_creation/04_lulc.R",            local = TRUE)
-setwd("C:\\Users\\Elizaveta\\OneDrive - Universität Bayreuth\\Dokumente\\MasterThesis\\MA_RGit_agroforestry_infield_and_beyond")
-if (RUN_SLOPE)          source("02_scripts/01_dataset_creation/05_slope.R",           local = TRUE)
-setwd("C:\\Users\\Elizaveta\\OneDrive - Universität Bayreuth\\Dokumente\\MasterThesis\\MA_RGit_agroforestry_infield_and_beyond")
+                        source(here::here("02_scripts/01_dataset_creation/04_lulc.R"),            local = TRUE)
+
+if (RUN_SLOPE)          source(here::here("02_scripts/01_dataset_creation/05_slope.R"),           local = TRUE)
+
 if (any(RUN_SWF_RASTERS, RUN_SWF_MERGE))
-                        source("02_scripts/01_dataset_creation/06_swf.R",             local = TRUE)
-setwd("C:\\Users\\Elizaveta\\OneDrive - Universität Bayreuth\\Dokumente\\MasterThesis\\MA_RGit_agroforestry_infield_and_beyond")
-if (RUN_SOILTEXTURE)    source("02_scripts/01_dataset_creation/07_soiltexture.R",     local = TRUE)
+                        source(here::here("02_scripts/01_dataset_creation/06_swf.R"),             local = TRUE)
 
-setwd("C:\\Users\\Elizaveta\\OneDrive - Universität Bayreuth\\Dokumente\\MasterThesis\\MA_RGit_agroforestry_infield_and_beyond")
+if (RUN_SOILTEXTURE)    source(here::here("02_scripts/01_dataset_creation/07_soiltexture.R"),     local = TRUE)
 
-source("02_scripts/01_dataset_creation/08_finalmerge.R",     local = TRUE)
+
+source(here::here("02_scripts/01_dataset_creation/08_finalmerge.R"),     local = TRUE)
 
 writeLines(paste("Last update:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),file.path(ANALYSIS_DIR, "last_update.txt"))
 

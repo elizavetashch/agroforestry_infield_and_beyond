@@ -70,7 +70,7 @@ extract_annulus_profile <- function(point_coords, raster, boundary_min,
     vals <- vals[!is.na(vals)]
     prop <- if (length(vals) > 0) sum(vals) / length(vals) else NA_real_
 
-    data.frame(distance = distances[idx], radius = r_outer, prop_swf = prop)
+    data.frame(distance = distances[idx], radius = r_outer, prop_swf = prop, n_swf = sum(vals))
   }) |> bind_rows()
 }
 
@@ -79,7 +79,7 @@ extract_field_interior <- function(point_coords, raster, boundary_min) {
   vals <- terra::extract(raster, vect(st_buffer(point_coords, dist = boundary_min)))[[2]]
   vals <- vals[!is.na(vals)]
   prop <- if (length(vals) > 0) sum(vals) / length(vals) else NA_real_
-  data.frame(radius = boundary_min, prop_swf = prop)
+  data.frame(radius = boundary_min, prop_swf = prop, n_swf = sum(vals))
 }
 
 # Process one reference year's raster directory
@@ -138,14 +138,17 @@ if (RUN_SWF_RASTERS) {
                           fields_sf, field_ids)
 
   # Annulus profiles (wide: one prop_swf column per reference year)
-  annulus_all <- res2015$annulus %>% rename(prop_swf.2015 = prop_swf) %>%
-    full_join(res2018$annulus %>% rename(prop_swf.2018 = prop_swf),
+  annulus_all <- res2015$annulus %>% rename(prop_swf.2015 = prop_swf, n_swf.2015 = n_swf) %>%
+    full_join(res2018$annulus %>% rename(prop_swf.2018 = prop_swf, n_swf.2018 = n_swf),
               by = c("id", "distance")) %>%
-    full_join(res2021$annulus %>% rename(prop_swf.2021 = prop_swf),
+    full_join(res2021$annulus %>% rename(prop_swf.2021 = prop_swf, n_swf.2021 = n_swf),
               by = c("id", "distance")) %>%
-    select(id, distance, starts_with("radius"), starts_with("prop_swf")) %>%
+    select(id, distance, starts_with("radius"), starts_with("prop_swf"), starts_with("n_swf")) %>%
     arrange(id, distance)
-
+  
+  # Standardise IDs
+  fix_id <- function(x) gsub("Ihinger$", "IhingerHof", x)
+  annulus_all$id  <- fix_id(annulus_all$id)
   write_csv(annulus_all, file.path(SWF_OUT, "swf_annulus_by_distance.csv"))
 
   # Field interior proportions
@@ -153,8 +156,10 @@ if (RUN_SWF_RASTERS) {
     full_join(res2018$interior %>% select(id, prop_swf.2018 = prop_swf), by = "id") %>%
     full_join(res2021$interior %>% select(id, prop_swf.2021 = prop_swf), by = "id") %>%
     arrange(id)
-
+  
+  interior_all$id <- fix_id(interior_all$id)
   write_csv(interior_all, file.path(SWF_OUT, "swf_within_field.csv"))
+  
   message("Saved SWF CSVs.")
 }
 
@@ -163,7 +168,7 @@ if (RUN_SWF_RASTERS) {
 # =============================================================================
 
 if (RUN_SWF_MERGE) {
-
+  
   df           <- read.csv(file.path(ANALYSIS_DIR, "AF_slope.csv"))
   annulus_all  <- read_csv(file.path(SWF_OUT, "swf_annulus_by_distance.csv"))
   interior_all <- read_csv(file.path(SWF_OUT, "swf_within_field.csv"))
@@ -182,7 +187,7 @@ if (RUN_SWF_MERGE) {
     mutate(swf_year = case_when(
       year == 2016            ~ "prop_swf.2015",
       year %in% 2017:2019    ~ "prop_swf.2018",
-      year >= 2020            ~ "prop_swf.2021"
+      year %in% 2020:2024            ~ "prop_swf.2021"
     ))
 
   swf_long <- annulus_all %>%
@@ -200,7 +205,7 @@ if (RUN_SWF_MERGE) {
               relationship = "many-to-many") %>%
     left_join(int_long, by = c("field" = "id", "swf_year"),
               relationship = "many-to-many")
-
+  #write_csv(dfswf, "01_Data/AF_swf.csv")
   write_csv(dfswf, file.path(ANALYSIS_DIR, "AF_swf.csv"))
   message("\nStep 6 complete — AF_swf.csv  (", nrow(dfswf), " rows)  ← FINAL DATASET")
 }

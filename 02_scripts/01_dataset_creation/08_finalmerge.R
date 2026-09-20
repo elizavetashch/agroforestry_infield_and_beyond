@@ -1,7 +1,7 @@
 
-AF_swf <- read_csv('01_Data/AnalysisData/AF_swf.csv')
+AF_slope <- read_csv('01_Data/AnalysisData/AF_slope.csv')
 soil   <- read_csv('01_Data/AnalysisData/SoilGrids/soiltexture.csv')
-df  <- left_join(AF_swf, soil, by = 'field')
+df  <- left_join(AF_slope, soil, by = 'field')
 
 # fertilization
 fert_raw <- gsub("[\u2013\u2212]", "-", df$fertilization_rate_kg_n_p_k_ha_1_year_1)
