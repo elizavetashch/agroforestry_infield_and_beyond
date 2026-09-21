@@ -10,6 +10,7 @@ library(gratia)
 
 mod_data <- read.csv("01_Data/20260920_moddata.csv")
 swf_mat <- read.csv("01_Data/20260920_swf_mat.csv")
+swf_argvals <- seq(from = 100, to = 1000, by=100)
 
 mod_data$year <- as.factor(mod_data$year)
 mod_data$field <- as.factor(mod_data$field)
@@ -114,15 +115,54 @@ plot(m_2, shade = TRUE, shade.col = "lightblue",
 
 AIC(m_2)
 
+# pfr model with field characteristics -----------------------------------------------------------
 
+m_3 <- pfr(
+  yield_rel ~
+    lf(swf_mat, argvals = swf_argvals, k = 3) +
+    s(distance_to_tree_strip, k = 5) + 
 
+    ti(distance_to_tree_strip, swf_slope_0to200, k = c(5, 5)) +
+    ti(distance_to_tree_strip, swf_slope_200to500, k = c(5, 5)) +
+    ti(distance_to_tree_strip, swf_slope_500to1000, k = c(5, 5)) +
+    
+    ti(distance_to_tree_strip, treeage, k = c(3, 3)) +
+    treeage + 
+    AFage +
+    PC1_c +
+    PC1_s +
+    l_shdi +
+    l_ed +
+    # s(field, bs = "re") + excluded because of concurvity
+    s(year, bs = "re"),
+  data = mod_data,
+  method = "REML"
+)
+
+summary(m_3)
+k.check(m_3)
+par(mfrow = c(2, 2))
+gam.check(m_3, pch = 16, cex = 0.5)
+par(mfrow = c(1, 1))
+plot(m_3, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
+
+AIC(m_3)
+concurvity(m_3, full = TRUE)
+make_gam_equation(m_3)
+make_gam_equation(summary(m_3))
+make_gam_equation(
+  summary(m_3),
+  significant_only = TRUE
+)
 # plots -------------------------------------------------------------------
 
 library(ggplot2)
 
 ## 1. Parametric coefficients forest plot
 
-coefs <- summary(m_2)$p.table
+coefs <- summary(m_3)$p.table
 
 coef_df <- data.frame(
   term = rownames(coefs),
@@ -147,3 +187,70 @@ ggplot(coef_df, aes(x = estimate, y = reorder(term, estimate))) +
     y = NULL
   ) +
   theme_classic()
+
+
+# dispersion check --------------------------------------------------------
+
+dispersion <- function(model) {
+  r <- residuals(model, type = "pearson")
+  df <- df.residual(model)
+  
+  c(
+    dispersion = sum(r^2) / df,
+    df_residual = df
+  )
+}
+
+dispersion(m_0)
+dispersion(m_1)
+dispersion(m_2)
+dispersion(m_3)
+
+
+# heteroscedacity ---------------------------------------------------------
+
+models <- list(m_0 = m_0,m_1 = m_1,m_2 = m_2,m_3 = m_3)
+
+
+par(mfrow = c(2, 2))
+
+for (nm in names(models)) {
+  m <- models[[nm]]
+  
+  plot(
+    fitted(m),
+    residuals(m, type = "pearson"),
+    pch = 16,
+    cex = 0.4,
+    main = nm,
+    xlab = "Fitted values",
+    ylab = "Pearson residuals"
+  )
+  
+  abline(h = 0, lty = 2)
+}
+
+par(mfrow = c(1, 1))
+
+
+# overall disagnostics ----------------------------------------------------
+
+diagnostics <- do.call(
+  rbind,
+  lapply(names(models), function(nm) {
+    
+    m <- models[[nm]]
+    r <- residuals(m, type = "pearson")
+    
+    data.frame(
+      model = nm,
+      n = nobs(m),
+      df_resid = df.residual(m),
+      dispersion = sum(r^2) / df.residual(m),
+      sigma = sqrt(sum(residuals(m)^2) / df.residual(m)),
+      AIC = AIC(m)
+    )
+  })
+)
+
+diagnostics
