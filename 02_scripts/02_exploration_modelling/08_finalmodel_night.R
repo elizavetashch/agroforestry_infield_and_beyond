@@ -96,6 +96,7 @@ m_2 <- gam(yield_rel ~ s(distance_to_tree_strip, k = 5) +
              PC1_s +
              l_shdi +
              l_ed +
+             s(field, bs = "re") +
              s(year, bs = "re"),
     data = mod_data,
     family = gaussian,
@@ -114,3 +115,35 @@ plot(m_2, shade = TRUE, shade.col = "lightblue",
 AIC(m_2)
 
 
+
+# plots -------------------------------------------------------------------
+
+library(ggplot2)
+
+## 1. Parametric coefficients forest plot
+
+coefs <- summary(m_2)$p.table
+
+coef_df <- data.frame(
+  term = rownames(coefs),
+  estimate = coefs[, "Estimate"],
+  se = coefs[, "Std. Error"]
+)
+
+coef_df <- coef_df[coef_df$term != "(Intercept)", ]
+
+coef_df$lower <- coef_df$estimate - 1.96 * coef_df$se
+coef_df$upper <- coef_df$estimate + 1.96 * coef_df$se
+
+ggplot(coef_df, aes(x = estimate, y = reorder(term, estimate))) +
+  geom_vline(xintercept = 0, linetype = 2) +
+  geom_errorbarh(
+    aes(xmin = lower, xmax = upper),
+    height = 0.2
+  ) +
+  geom_point(size = 3) +
+  labs(
+    x = "Model coefficient (95% CI)",
+    y = NULL
+  ) +
+  theme_classic()
