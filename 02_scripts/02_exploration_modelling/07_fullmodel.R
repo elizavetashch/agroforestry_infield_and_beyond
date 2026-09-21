@@ -4,133 +4,365 @@ library(refund)
 library(mgcv)    
 library(tidyverse)
 library(gratia)    
+library(broom) 
+
+mod_data <- read.csv("01_Data/20260920_moddata.csv")
+mod_data <- mod_data |> mutate(distance_to_tree_strip_changed = 
+  case_when(
+    distance_to_tree_strip == 4.5 ~ 4,
+    distance_to_tree_strip == 9 ~ 7,
+    TRUE ~ distance_to_tree_strip 
+  )
+) |> 
+  mutate(year = as.factor(year),
+         field = as.factor(field),
+         crop_unified = as.factor(crop_unified)) |> 
+  mutate(photo_path   = factor(ifelse(crop_unified == "maize", "C4", "C3")))
+
+swf_mat <- read.csv("01_Data/20260920_swf_mat.csv")
 
 
-df <- read_csv("01_Data/AF_swf.csv")  
+# calculate slopes for swf ------------------------------------------------
+
+radii <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000)
+
+swf_mat <- as.matrix(mod_data[, paste0("swf_d", radii)])
+
+mod_data$swf_slope_0to200 <- apply(
+  swf_mat[, radii >= 100 & radii <= 200, drop = FALSE],
+  1,
+  function(y) coef(lm(y ~ radii[radii >= 100 & radii <= 200]))[2]
+)
+
+mod_data$swf_slope_200to500 <- apply(
+  swf_mat[, radii >= 200 & radii <= 500, drop = FALSE],
+  1,
+  function(y) coef(lm(y ~ radii[radii >= 200 & radii <= 500]))[2]
+)
+
+mod_data$swf_slope_500to1000 <- apply(
+  swf_mat[, radii >= 500 & radii <= 1000, drop = FALSE],
+  1,
+  function(y) coef(lm(y ~ radii[radii >= 500 & radii <= 1000]))[2]
+)
+summary(mod_data$swf_slope_0to200)
+summary(mod_data$swf_slope_200to500)
+summary(mod_data$swf_slope_500to1000)
+
+# model only distance -----------------------------------------------------
 
 
-dflong <- df  |> 
-  group_by(field, year, crop_unified, distance_to_tree_strip) |>
-  summarise(
-    yield_tha     = mean(yield_tha, na.rm = TRUE),
-    fert_N        = mean(fert_N), # fertilimod_dataation
-    temp_C_mean   = first(temp_C_mean), # climate
-    precip_mm_sum = first(precip_mm_sum), # climate
-    sun_MJ_m2_mean= first(sun_MJ_m2_mean), # climate
-    AFage         = first(AFage), # AFdesign
-    treeage         = first(treeage), # AFdesign
-    clay          = first(clay), #soil
-    sand          = first(sand), #soil
-    silt          = first(silt), #soil
-    l_shdi        = first(l_shdi), # landscape
-    l_ed          = first(l_ed), # landscpae
-    l_np          = first(l_np), # landscape
-    l_contag      = first(l_contag), # landscape
-    mean_slope    = first(mean_slope), # slope
-    .groups = "drop"
-  )  |> 
-  mutate(
-    photo_path   = factor(ifelse(crop_unified == "maimod_datae", "C4", "C3")),
-    log_AFage    = log1p(AFage),
-    log_dist     = log(distance_to_tree_strip),
-    crop_unified = factor(crop_unified),
-    field        = factor(field),
-    year         = factor(year),
-    dist_bin     = factor(distance_to_tree_strip),
-    # yield relative to unit mean (for interpretation)
-    .by = c(field, year, crop_unified)
-  ) |>
-  group_by(field, year, crop_unified) |>
-  mutate(yield_rel = yield_tha / mean(yield_tha)) |>
-  ungroup()
+m_dist <- gam(
+  yield_rel ~
+  s(distance_to_tree_strip, k = 5) +
+  s(field, bs = "re") +
+  s(year, bs = "re"),
+  data   = mod_data, 
+  family=gaussian(),
+  method = "REML"
+)
+
+par(mfrow = c(2,2))
+summary(m_dist)
+gam.check(m_dist)
 
 
-nrow(dflong) # 140
-nrow(distinct(dflong, field, year, crop_unified)) # 34
-table(dflong$photo_path) # C4: 15, C3: 125
+par(mfrow=c(1,2))
+qq.gam(m_dist, main="normal", rep=200, asp=1)
+k.check(m_dist)
+# k-index < 1 AND p < 0.05 → basis too restrictive; increase k in s()
+
+plot(m_dist, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
 
 
-df |>
-  filter(!is.na(prop_swf)) |>
-  select(field, year, distance, prop_swf) |> unique()
+m_noswf <- gam(
+  yield_rel ~
+    s(distance_to_tree_strip, k = 5) +
+    ti(distance_to_tree_strip, treeage, k = c(3, 3)) +
+    AFage +
+    PC1_c +
+    PC1_s +
+    l_shdi +
+    l_ed +
+    s(field, bs = "re") +
+    s(year, bs = "re"),
+  data   = mod_data, 
+  family=gaussian(),
+  method = "REML"
+)
 
 
-swf_unit <- df |>
-  filter(!is.na(prop_swf)) |>
-  group_by(field, year, distance) |>
-  summarise(prop_swf = mean(prop_swf, na.rm = TRUE), .groups = "drop") |>
-  group_by(field, year) |>
-  arrange(distance, .by_group = TRUE) |>
-  mutate(radius_rank = row_number()) |>
-  ungroup()
-
-swf_summary <- swf_unit |>
-  group_by(field, year) |>
-  summarise(
-    swf_mean      = mean(prop_swf),
-    swf_max       = max(prop_swf),
-    swf_nearfield = first(prop_swf[distance == min(distance)]),  # SWF at smallest distance
-    swf_slope     = coef(lm(prop_swf ~ distance))[["distance"]], # linear slope
-    swf_n_radii   = n(),
-    .groups = "drop"
-  ) |> mutate(year = as.factor(year))
-
-swf_wide <- swf_unit |>
-  pivot_wider(
-    id_cols    = c(field, year),
-    names_from = distance,
-    names_prefix = "swf_d",
-    values_from = prop_swf
-  ) |> mutate(year = as.factor(year))
-
-mod_data <- dflong |>
-  left_join(swf_summary, by = c("field", "year")) |>
-  left_join(swf_wide,    by = c("field", "year")) |> 
-  mutate(field = as.factor(field),
-         year = as.factor(year))
-
-nrow(mod_data) # 140
+par(mfrow = c(2,2))
+summary(m_noswf)
+gam.check(m_noswf)
 
 
+par(mfrow=c(2,2))
+qq.gam(m_noswf, main="normal", rep=200, asp=1)
+k.check(m_noswf)
+# k-index < 1 AND p < 0.05 → basis too restrictive; increase k in s()
 
-# principal components ----------------------------------------------------
-field        <- as.factor(mod_data$field)
-year         <- as.factor(mod_data$year)
+plot(m_noswf, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
 
-temp       <- as.numeric(mod_data$temp_C_mean)
-sun        <- as.numeric(mod_data$sun_MJ_m2_mean)
-precip     <- as.numeric(mod_data$precip_mm_sum)
-clay       <- as.numeric(mod_data$clay)
-sand       <- as.numeric(mod_data$sand)
-silt       <- as.numeric(mod_data$silt)
+AIC(m_dist, m_noswf)
 
-climate   <- data.frame(field, year, temp, sun, precip)
-climate_s <- scale(climate[-c(1:2)])
-data.pca_c  <- princomp(climate_s)
-soil   <- data.frame(field, year, clay, sand, silt)
-soil_s <- scale(soil[-c(1:2)])
-data.pca_s <- princomp(soil_s)
-soil_pca      <- data.frame(year = soil$year,  field = soil$field,      PC1_s = data.pca_s$scores[, 1]) |> unique()
-climate_pca   <- data.frame(year = climate$year,field = soil$field,     PC1_c = data.pca_c$scores[, 1])|> unique()
+m_swf <- gam(
+  yield_rel ~
+    s(distance_to_tree_strip, by =  photo_path, k = 5) +
+    swf_slope_0to200 +
+    swf_slope_200to500 +
+    swf_slope_500to1000 +
+    ti(distance_to_tree_strip, swf_slope_0to200, k = c(5, 5)) +
+    ti(distance_to_tree_strip, treeage, k = c(3, 3)) +
+    AFage +
+    PC1_c +
+    PC1_s +
+    l_shdi +
+    l_ed +
+    s(field, bs = "re") +
+    s(year, bs = "re"),
+  data = mod_data,
+  family = gaussian(),
+  method = "REML"
+)
 
-mod_data <- mod_data |>
-  dplyr::left_join(soil_pca, by = c("field", "year")) |>
-  dplyr::left_join(climate_pca, by = c("field", "year"))|> 
-  mutate(field = as.factor(field),
-         year = as.factor(year))
-
-# distance vector ─────────────────────────────────────
-swf_argvals <- seq(from = 100, to = 1000, by=100)
-
-# ── 0d. SWF matrix aligned to mod_data rows ───────────────────────────
-# swf matrix
-swf_mat <- mod_data |>
-  select(starts_with("swf_d")) |>
-  as.matrix()
-
-summary(swf_mat)
+summary(m_swf)
+gam.check(m_swf)
+k.check(m_swf)
+plot(m_swf, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
+AIC(m_swf)
 
 
+
+# glmm comparision --------------------------------------------------------
+
+library(lme4)
+
+m_swf_lmm <- lmer(
+  yield_rel ~
+    distance_to_tree_strip * photo_path +
+    swf_slope_0to200 +
+    swf_slope_200to500 +
+    swf_slope_500to1000 +
+    distance_to_tree_strip * swf_slope_0to200 +
+    distance_to_tree_strip * treeage +
+    AFage +
+    PC1_c +
+    PC1_s +
+    l_shdi +
+    l_ed +
+    (1 | field) +
+    (1 | year),
+  data = mod_data,
+  REML = TRUE
+)
+
+AIC(m_swf_lmm)
+
+# chatgpt suggestion ------------------------------------------------------
+
+library(ggplot2)
+
+newdat <- expand.grid(
+  distance_to_tree_strip = seq(
+    min(mod_data$distance_to_tree_strip, na.rm = TRUE),
+    max(mod_data$distance_to_tree_strip, na.rm = TRUE),
+    length.out = 100
+  ),
+  swf_slope_0to200 = seq(
+    quantile(mod_data$swf_slope_0to200, 0.05, na.rm = TRUE),
+    quantile(mod_data$swf_slope_0to200, 0.95, na.rm = TRUE),
+    length.out = 100
+  )
+)
+
+# Hold other variables at representative values
+newdat$swf_slope_200to500 <- mean(mod_data$swf_slope_200to500, na.rm = TRUE)
+newdat$swf_slope_500to1000 <- mean(mod_data$swf_slope_500to1000, na.rm = TRUE)
+newdat$treeage <- median(mod_data$treeage, na.rm = TRUE)
+newdat$AFage <- median(mod_data$AFage, na.rm = TRUE)
+newdat$PC1_c <- mean(mod_data$PC1_c, na.rm = TRUE)
+newdat$PC1_s <- mean(mod_data$PC1_s, na.rm = TRUE)
+newdat$l_shdi <- mean(mod_data$l_shdi, na.rm = TRUE)
+newdat$l_ed <- mean(mod_data$l_ed, na.rm = TRUE)
+
+# Need a valid photo_path, field, crop and year
+newdat$photo_path <- levels(factor(mod_data$photo_path))[1]
+newdat$field <- levels(factor(mod_data$field))[1]
+newdat$crop_unified <- levels(factor(mod_data$crop_unified))[1]
+newdat$year <- levels(factor(mod_data$year))[1]
+
+newdat$pred <- predict(
+  m_swf,
+  newdata = newdat,
+  type = "response",
+  exclude = c("s(field)", "s(crop_unified)", "s(year)")
+)
+
+
+ggplot(
+  newdat,
+  aes(
+    x = distance_to_tree_strip,
+    y = swf_slope_0to200,
+    fill = pred
+  )
+) +
+  geom_raster() +
+  geom_contour(
+    aes(z = pred),
+    colour = "white",
+    alpha = 0.7
+  ) +
+  scale_fill_viridis_c(name = "Predicted\nrelative yield") +
+  labs(
+    x = "Distance to tree strip (m)",
+    y = "SWF slope, 0–200 m",
+    title = "Interaction between SWF structure and distance to tree strip"
+  ) +
+  theme_minimal(base_size = 14)
+
+
+
+
+
+# chatgpt two -------------------------------------------------------------
+
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+swf_slopes_long <- mod_data %>%
+  select(
+    swf_slope_0to200,
+    swf_slope_200to500,
+    swf_slope_500to1000
+  ) %>%
+  pivot_longer(
+    everything(),
+    names_to = "scale",
+    values_to = "slope"
+  )
+
+ggplot(swf_slopes_long, aes(x = scale, y = slope)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(
+    x = NULL,
+    y = "SWF slope",
+    title = "SWF spatial structure at three scales"
+  ) +
+  theme_minimal(base_size = 14)
+
+
+
+# gratia ------------------------------------------------------------------
+
+summary(m_swf)$p.table
+
+
+
+# graph 4  ----------------------------------------------------------------
+
+coefs <- summary(m_swf)$p.table
+
+swf_coefs <- data.frame(
+  term = c(
+    "SWF slope 0–200 m",
+    "SWF slope 200–500 m",
+    "SWF slope 500–1000 m"
+  ),
+  estimate = coefs[
+    c(
+      "swf_slope_0to200",
+      "swf_slope_200to500",
+      "swf_slope_500to1000"
+    ),
+    "Estimate"
+  ],
+  se = coefs[
+    c(
+      "swf_slope_0to200",
+      "swf_slope_200to500",
+      "swf_slope_500to1000"
+    ),
+    "Std. Error"
+  ]
+)
+
+swf_coefs$lower <- swf_coefs$estimate - 1.96 * swf_coefs$se
+swf_coefs$upper <- swf_coefs$estimate + 1.96 * swf_coefs$se
+
+ggplot(swf_coefs, aes(x = estimate, y = term)) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_errorbarh(
+    aes(xmin = lower, xmax = upper),
+    height = 0.15
+  ) +
+  geom_point(size = 3) +
+  labs(
+    x = "Estimated coefficient",
+    y = NULL,
+    title = "Estimated effects of SWF spatial slopes"
+  ) +
+  theme_minimal(base_size = 14)
+
+
+
+# fitted relationship and raw data ----------------------------------------
+
+ggplot(
+  mod_data,
+  aes(
+    x = distance_to_tree_strip,
+    y = yield_rel
+  )
+) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(
+    method = "gam",
+    formula = y ~ s(x, k = 5),
+    se = TRUE
+  ) +
+  labs(
+    x = "Distance to tree strip (m)",
+    y = "Relative yield",
+    title = "Observed relationship between distance and relative yield"
+  ) +
+  theme_minimal(base_size = 14)
+# pfr model ---------------------------------------------------------------
+
+
+m_pfr_int <- pfr(
+  yield_rel ~
+    lf(swf_mat, argvals = swf_argvals, k = 3) +
+    s(distance_to_tree_strip, k = 5) +
+    ti(distance_to_tree_strip, treeage, k = c(3, 3)) +
+    log_AFage +
+    PC1_c +
+    PC1_s +
+    l_shdi +
+    l_ed +
+    s(field, bs = "re") +
+    s(year, bs = "re"),
+  data = mod_data,
+  method = "REML"
+)
+
+summary(m_swf)
+gam.check(m_swf)
+
+plot(m_swf, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
+
+AIC(m_pfr_int)
 # model pfr -------------------------------------------------------------------
 
 D <- as.numeric(scale(
@@ -141,12 +373,13 @@ D <- as.numeric(scale(
 
 swf_D <- swf_mat * D
 termsnames <- c("swf", "swfD", "distpath", "distnear", "disttreeage", "logAFage", "climate", "soil", "shdi", "edge", "field", "year")
+
+# with pfr i always get positive aic 
 m_pfr_int <- pfr(
-  yield_tha ~
-    lf(swf_mat, argvals = swf_argvals, k = 3) +
-    lf(swf_D,   argvals = swf_argvals, k = 3) +
+  yield_rel ~
+    lf(swf_mat, argvals = radii, k = 3) +
     s(distance_to_tree_strip, by = photo_path, k = 3) +
-    ti(distance_to_tree_strip, swf_nearfield, k = c(3, 3)) + 
+  #  ti(distance_to_tree_strip, swf_mat, k = c(3, 3)) + 
     ti(distance_to_tree_strip, treeage, k = c(3, 3)) +
     log_AFage +
     PC1_c +

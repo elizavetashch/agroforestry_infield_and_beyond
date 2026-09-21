@@ -64,7 +64,7 @@ for (f in fields) {
       plot.title = element_text(size = 18),
       
       # Legend at bottom
-      legend.position = "bottom"
+      legend.position = "none"
     )
   
   
@@ -112,7 +112,7 @@ for (f in fields) {
       # Title
       plot.title = element_text(size = 18),
       
-      legend.position = "bottom"
+      legend.position = "right"
     )
   
   # --- combine side by side (left | right) -----------------------------------

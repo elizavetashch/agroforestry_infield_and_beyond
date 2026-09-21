@@ -27,6 +27,7 @@ dflong <- df  |>
     l_np          = first(l_np), # landscape
     l_contag      = first(l_contag), # landscape
     mean_slope    = first(mean_slope), # slope
+    prop_swf_within = first(prop_swf_within),
     .groups = "drop"
   )  |> 
   mutate(
@@ -48,7 +49,7 @@ dflong <- df  |>
 nrow(dflong) # 140
 nrow(distinct(dflong, field, year, crop_unified)) # 34
 table(dflong$photo_path) # C4: 15, C3: 125
-
+summary(dflong$yield_rel)
 
 df |>
   filter(!is.na(prop_swf)) |>
@@ -132,6 +133,10 @@ summary(swf_mat)
 
 
 # write csv ---------------------------------------------------------------
+mod_data <- mod_data |> 
+group_by(field, year, crop_unified) %>%
+  mutate(yield_rel = yield_tha / mean(yield_tha)) %>%
+  ungroup()
 
 write.csv(mod_data, "01_Data/20260920_moddata.csv", row.names = FALSE)
 write.csv(swf_mat, "01_Data/20260920_swf_mat.csv", row.names = FALSE)
@@ -309,8 +314,8 @@ ggplot(plot_data, aes(x = distance_to_tree_strip)) +
 
 library(ggplot2)
 
-beta0 <- coef(m_pfr_int, select = 1)
-beta1 <- coef(m_pfr_int, select = 2)
+beta0 <- coef(m_pfr, select = 1)
+beta1 <- coef(m_pfr, select = 2)
 
 ggplot() +
   geom_hline(yintercept = 0, linetype = "dashed") +
@@ -336,9 +341,9 @@ ggplot() +
   ) +
   
   labs(
-    x = "SWF radius (m)",
+    x = "SWF distance (m)",
     y = expression(beta[0](r)),
-    title = "Baseline SWF coefficient function"
+    title = "SWF coefficient function"
   ) +
   theme_minimal()
 
