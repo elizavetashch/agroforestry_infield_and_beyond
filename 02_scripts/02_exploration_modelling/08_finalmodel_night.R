@@ -176,17 +176,23 @@ coef_df$lower <- coef_df$estimate - 1.96 * coef_df$se
 coef_df$upper <- coef_df$estimate + 1.96 * coef_df$se
 
 ggplot(coef_df, aes(x = estimate, y = reorder(term, estimate))) +
-  geom_vline(xintercept = 0, linetype = 2) +
-  geom_errorbarh(
-    aes(xmin = lower, xmax = upper),
-    height = 0.2
-  ) +
-  geom_point(size = 3) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "grey50") +
+  geom_errorbarh(aes(xmin = coef_df$lower, xmax = coef_df$upper ), height = 0.25, linewidth = 0.8) +
+  geom_point(size = 3.5) +
+  scale_colour_manual(values = c("p < 0.05" = "#4ECDC4", "p ≥ 0.05" = "grey60")) +
   labs(
-    x = "Model coefficient (95% CI)",
-    y = NULL
+    title    = "Forest plot — parametric terms",
+    subtitle = "Estimates ± 95% CI from GAM m_swf2",
+    x        = "Effect on relative yield",
+    y        = NULL,
+    colour   = NULL
   ) +
-  theme_classic()
+  #coord_cartesian(xlim = c(-1, 1)) +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "top", 
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size = 18),
+        axis.text.y = element_text(size = 18))
 
 
 # dispersion check --------------------------------------------------------

@@ -7,7 +7,7 @@ library(mgcv)
 library(ggplot2)
 
 # extract parametric terms (drop intercept)
-fp <- as.data.frame(summary(m_swf3)$p.table) |>
+fp <- as.data.frame(summary(m_3)$p.table) |>
   tibble::rownames_to_column("term") |>
   subset(term != "(Intercept)") |>
   transform(
@@ -17,17 +17,17 @@ fp <- as.data.frame(summary(m_swf3)$p.table) |>
     term = factor(term)  # sort by effect size
   )
 
-fp$term <- dplyr::recode(fp$term,
-                         swf_slope_0to200    = "SWF slope 0–200m",
-                         swf_slope_200to500  = "SWF slope 200–500m",
-                         swf_slope_500to1000 = "SWF slope 500–1000m",
-                         AFage               = "AF system age",
-                         PC1_c               = "PC1 climate",
-                         PC1_s               = "PC1 soil",
-                         l_shdi              = "Landscape diversity (SHDI)",
-                         l_ed                = "Edge density"
-)
-fp$term <- factor(fp$term, levels = fp$term[order(fp$Estimate)])
+# fp$term <- dplyr::recode(fp$term,
+#                          swf_slope_0to200    = "SWF slope 0–200m",
+#                          swf_slope_200to500  = "SWF slope 200–500m",
+#                          swf_slope_500to1000 = "SWF slope 500–1000m",
+#                          AFage               = "AF system age",
+#                          PC1_c               = "PC1 climate",
+#                          PC1_s               = "PC1 soil",
+#                          l_shdi              = "Landscape diversity (SHDI)",
+#                          l_ed                = "Edge density"
+# )
+# fp$term <- factor(fp$term, levels = fp$term[order(fp$Estimate)])
 
 ggplot(fp, aes(x = Estimate, y = term, colour = sig)) +
   geom_vline(xintercept = 0, linetype = "dashed", colour = "grey50") +
@@ -36,7 +36,7 @@ ggplot(fp, aes(x = Estimate, y = term, colour = sig)) +
   scale_colour_manual(values = c("p < 0.05" = "#4ECDC4", "p ≥ 0.05" = "grey60")) +
   labs(
     title    = "Forest plot — parametric terms",
-    subtitle = "Estimates ± 95% CI from GAM m_swf2",
+    subtitle = "Estimates ± 95% CI",
     x        = "Effect on relative yield",
     y        = NULL,
     colour   = NULL
