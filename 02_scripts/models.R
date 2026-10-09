@@ -1,3 +1,110 @@
+
+library(dplyr)
+library(tidyverse)
+library(mgcv) 
+library(ggplot2)
+library(tidyr)
+
+df <- read_csv("01_Data/AF_swf.csv")  
+colnames(df)
+
+df |> distinct(field,year, crop_unified)
+df |> distinct(field,year, crop_unified, distance_to_tree_strip)
+
+keys34 <- c("field", "year", "crop_unified")
+keys140 <- c(keys34, "distance_to_tree_strip")
+
+clim_vars <- c("temp_C_mean", "precip_mm_sum", "sun_MJ_m2_mean")
+soil_vars <- c("clay", "sand", "silt")
+const_vars <- c(clim_vars, soil_vars, "AFage", "treeage",
+                "l_shdi", "l_ed", "l_np", "l_contag", "mean_slope",
+                "prop_swf_within", "sowing_month", "harvest_month")
+
+moddata <- 
+  df |> 
+  select(plot, keys140, clim_vars, soil_vars, const_vars, yield_tha) |> 
+  distinct()
+
+moddata <- 
+moddata |> 
+mutate(
+  crop_season = case_when(
+    sowing_month %in% c("Sep", "Oct", "Nov", "Dec", "Jan") ~ "winter",
+    sowing_month %in% c("Mar", "Apr", "May")               ~ "summer",
+    .default = NA_character_),
+  key34    = paste(field, year, crop_unified, sep = "_"),
+  field_year = paste(field, year, sep = "_"),
+  key140       = paste(key34, distance_to_tree_strip, sep = "_")
+)
+
+# cell means and a unit reference that weights every distance equally
+moddata <- moddata |>
+  mutate(key140_mean = mean(yield_tha), n_cell = n(), .by = key140)
+
+key34_ref <- moddata |>
+  distinct(key34, key140, key140_mean) |>
+  summarise(key34_mean = mean(key140_mean), .by = key34)
+
+moddata <- moddata |>
+  left_join(key34_ref, by = "key34") |>
+  mutate(
+    yield_rel = yield_tha / key34_mean,
+    key140_rel  = key140_mean / key34_mean) |>
+  mutate(dist_rel = distance_to_tree_strip / max(distance_to_tree_strip),
+         .by = field_year)
+
+
+clim_units <- moddata |> distinct(across(all_of(c("key34", clim_vars))))
+pca_c <- prcomp(clim_units[clim_vars], scale. = TRUE)
+clim_units$PC1_c <- pca_c$x[, 1]
+print(pca_c$rotation); print(summary(pca_c))   
+
+soil_units <- moddata |> distinct(across(all_of(c("key34", soil_vars))))
+pca_s <- prcomp(soil_units[soil_vars], scale. = TRUE)
+soil_units$PC1_s <- pca_s$x[, 1]
+print(pca_s$rotation); print(summary(pca_s))
+
+moddata <- moddata |>
+  left_join(select(clim_units, key34, PC1_c), by = "key34") |>
+  left_join(select(soil_units, key34, PC1_s),   by = "key34")
+
+colnames(moddata)
+nrow(moddata)
+
+
+# swfmoddata --------------------------------------------------------------
+
+swf_link <- df |> distinct(field, year, swf_year)
+
+radii    <- sort(unique(df$distance))
+swf_cols <- paste0("swf_d", radii)
+
+swfmoddata <- df |>
+  distinct(field, swf_year, distance, prop_swf) |>
+  pivot_wider(id_cols      = c(field, swf_year),
+              names_from   = distance,
+              names_prefix = "swf_d",
+              values_from  = prop_swf)
+
+nrow(swfmoddata)   # number of distinct SWF curves = 18
+
+moddata <- moddata |>
+  left_join(swf_link,   by = c("field", "year")) |>
+  left_join(swfmoddata, by = c("field", "swf_year"))
+
+moddata$SWF <- as.matrix(moddata[swf_cols])
+moddata$R   <- matrix(radii, nrow = nrow(moddata), ncol = length(radii), byrow = TRUE)
+
+moddata <- select(moddata, -all_of(swf_cols))
+
+
+
+# models ------------------------------------------------------------------
+
+
+
+
+
 # models after conference 
 
 #dflong <- read.csv("01_Data/20260920_moddata.csv")
@@ -9,12 +116,10 @@ library(ggplot2)
 library(tidyr)
 
 swf_mat <- read.csv("01_Data/20260920_swf_mat.csv")
-df <- read_csv("01_Data/AF_swf.csv")  
-
+v
 dflong <- df  |> 
   group_by(field, year, crop_unified, distance_to_tree_strip) |>
   summarise(
-    yield_tha     = mean(yield_tha, na.rm = TRUE),
     fert_N        = mean(fert_N), # fertilidflongation
     temp_C_mean   = first(temp_C_mean), # climate
     precip_mm_sum = first(precip_mm_sum), # climate
@@ -399,7 +504,8 @@ vars <- c("distance_to_tree_strip","l_shdi", "l_ed", "l_contag", "treeage", "AFa
 dfscaled[vars] <- lapply(dflong[vars], function(x) as.numeric(scale(x)))
 
 msc_global <- gam(yield_rel ~ 
-                  s(distance_to_tree_strip, k = 5)+
+                  s(dist_rel, k = 5)+
+                  ti(dist_rel, treeage, k = c(5, 5)) +
                   s(R, by = SWF, k = 4) + 
                   l_shdi + l_ed + l_contag +  
                   treeage + 
@@ -416,3 +522,14 @@ gam.check(msc_global)
 k.check(msc_global)
 par(mfrow = c(2, 2))
 gam.check(msc_global, pch = 16, cex = 0.5)
+
+
+library(dplyr)
+
+dflong <- dflong %>%
+  group_by(field, year) %>%
+  mutate(dist_rel = distance_to_tree_strip / max(distance_to_tree_strip)) %>%
+  ungroup()
+
+
+
