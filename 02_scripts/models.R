@@ -385,3 +385,7 @@ m_gl_system <- gam(yield_rel ~
                   s(year, bs = "re"),
                 data = dflong, method = "REML")
 summary(m_gl_system)
+
+
+
+# write.csv(dflong, file = "01_Data/20261009_moddata")
