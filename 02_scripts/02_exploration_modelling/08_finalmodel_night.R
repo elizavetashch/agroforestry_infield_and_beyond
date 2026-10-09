@@ -42,6 +42,9 @@ mod_data$swf_slope_500to1000 <- apply(
 summary(mod_data)
 
 
+
+
+
 # easiest model -----------------------------------------------------------
 
 m_0 <- gam(yield_rel ~ s(distance_to_tree_strip, k = 5) + s(year, bs = "re"),
@@ -260,3 +263,35 @@ diagnostics <- do.call(
 )
 
 diagnostics
+
+
+
+# plotting the lf() effect ------------------------------------------------
+
+lf_eff <- coef(m_3, n = 200)
+
+str(lf_eff)
+
+
+
+library(ggplot2)
+
+ggplot(lf_eff, aes(x = swf_mat.argvals, y = value)) +
+  geom_ribbon(
+    aes(
+      ymin = value - 1.96 * se,
+      ymax = value + 1.96 * se
+    ),
+    alpha = 0.2
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_line(linewidth = 1.2) +
+  labs(
+    x = "SWF distance to the field (m)",
+    y = "Effect of SWF on Yield"
+  ) +
+  theme_classic(base_size = 15) +
+  theme(legend.position = "top", 
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18))

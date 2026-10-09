@@ -80,14 +80,112 @@ ggplot(fp, aes(x = Estimate, y = term, colour = sig)) +
 
 # pfr model results  ------------------------------------------------------
 
-library(gratia)
+library(dplyr)
+library(ggplot2)
 
-smooth_estimates(m_pfr, smooth = "lf(swf_mat, argvals = swf_argvals, k = 5)", partial_match = TRUE) |>
-  ggplot(aes(x = swf_mat, y = .estimate)) +
-  geom_ribbon(aes(ymin = .lower_ci, ymax = .upper_ci), alpha = 0.2) +
-  geom_line() +
-  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey50") +
-  labs(x = "SWF radius (argvals)", y = "β(r) — effect on yield (t/ha)") +
-  theme_bw()
-  
+distance_seq <- seq(
+  min(mod_data$distance_to_tree_strip, na.rm = TRUE),
+  max(mod_data$distance_to_tree_strip, na.rm = TRUE),
+  length.out = 100
+)
 
+swf_seq <- seq(
+  min(mod_data$swf_slope_500to1000, na.rm = TRUE),
+  max(mod_data$swf_slope_500to1000, na.rm = TRUE),
+  length.out = 100
+)
+
+newdat_3d <- expand.grid(
+  distance_to_tree_strip = distance_seq,
+  swf_slope_500to1000 = swf_seq
+)
+
+newdat_3d$swf_slope_0to200 <- mean(
+  mod_data$swf_slope_0to200,
+  na.rm = TRUE
+)
+
+newdat_3d$swf_slope_200to500 <- mean(
+  mod_data$swf_slope_200to500,
+  na.rm = TRUE
+)
+
+newdat_3d$treeage <- mean(
+  mod_data$treeage,
+  na.rm = TRUE
+)
+
+newdat_3d$AFage <- mean(
+  mod_data$AFage,
+  na.rm = TRUE
+)
+
+newdat_3d$PC1_c <- mean(
+  mod_data$PC1_c,
+  na.rm = TRUE
+)
+
+newdat_3d$PC1_s <- mean(
+  mod_data$PC1_s,
+  na.rm = TRUE
+)
+
+newdat_3d$l_shdi <- mean(
+  mod_data$l_shdi,
+  na.rm = TRUE
+)
+
+newdat_3d$l_ed <- mean(
+  mod_data$l_ed,
+  na.rm = TRUE
+)
+
+newdat_3d$year <- mod_data$year[1]
+
+swf_mean <- colMeans(swf_mat, na.rm = TRUE)
+
+newdat_3d$swf_mat <- matrix(
+  rep(swf_mean, nrow(newdat_3d)),
+  nrow = nrow(newdat_3d),
+  byrow = TRUE
+)
+
+
+
+pred_3d <- predict(
+  m_3,
+  newdata = newdat_3d,
+  type = "response"
+)
+
+newdat_3d$yield_pred <- as.numeric(pred_3d)
+
+
+
+library(plotly)
+
+z_matrix <- matrix(
+  newdat_3d$yield_pred,
+  nrow = length(distance_seq),
+  ncol = length(swf_seq)
+)
+
+plot_ly(
+  x = distance_seq,
+  y = swf_seq,
+  z = z_matrix,
+  type = "surface"
+) |>
+  layout(
+    scene = list(
+      xaxis = list(
+        title = "Distance from tree strip (m)"
+      ),
+      yaxis = list(
+        title = "SWF slope 500–1000 m"
+      ),
+      zaxis = list(
+        title = "Predicted relative yield"
+      )
+    )
+  )
