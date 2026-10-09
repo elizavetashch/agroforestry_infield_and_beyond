@@ -102,6 +102,9 @@ moddata$year <- as.factor(moddata$year)
 moddata$crop_unified <- as.factor(moddata$crop_unified)
 moddata$crop_season <- as.factor(moddata$crop_season)
 
+
+
+write.csv(moddata, "01_Data/moddata.csv", row.names = FALSE)
 # models ------------------------------------------------------------------
 
 # H1: Distance changes the yield 
@@ -140,6 +143,13 @@ m_02 <- gam(yield_rel ~  crop_unified +
               s(year, bs = "re"),
             data = moddata, method = "REML")
 summary(m_02)
+k.check(m_02)
+par(mfrow = c(2, 2))
+gam.check(m_02, pch = 16, cex = 0.5)
+par(mfrow = c(1, 1))
+plot(m_02, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
 
 # H3: SWF has an effect on yield 
 m_03 <- gam(yield_tha ~ crop_unified +
@@ -150,6 +160,14 @@ m_03 <- gam(yield_tha ~ crop_unified +
            data = moddata, method = "REML")
 
 summary(m_03)
+k.check(m_03)
+par(mfrow = c(2, 2))
+gam.check(m_03, pch = 16, cex = 0.5)
+par(mfrow = c(1, 1))
+plot(m_03, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
+
 # H4: adding swf to distance model will improve model performance
 m_04 <- gam(yield_rel ~ crop_unified + 
               s(distance_to_tree_strip, k = 5, by = crop_unified) +
@@ -161,6 +179,13 @@ m_04 <- gam(yield_rel ~ crop_unified +
             data = moddata, method = "REML")
 
 summary(m_04)
+k.check(m_04)
+par(mfrow = c(2, 2))
+gam.check(m_04, pch = 16, cex = 0.5)
+par(mfrow = c(1, 1))
+plot(m_04, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
 # H5: landscape composition and configuration has an effect on yield 
 m_05 <- gam(yield_rel ~  crop_unified +
               l_shdi + l_contag + l_ed + 
@@ -170,6 +195,14 @@ m_05 <- gam(yield_rel ~  crop_unified +
             data = moddata, method = "REML")
 
 summary(m_05)
+k.check(m_05)
+par(mfrow = c(2, 2))
+gam.check(m_05, pch = 16, cex = 0.5)
+par(mfrow = c(1, 1))
+plot(m_05, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
+
 # H6: adding landscape to the model will improve model performance
 m_06 <- gam(yield_rel ~  crop_unified +
               s(distance_to_tree_strip, k = 5, by = crop_unified) +
@@ -181,7 +214,14 @@ m_06 <- gam(yield_rel ~  crop_unified +
               s(year, bs = "re"),
             data = moddata, method = "REML")
 
-summary(m_05)
+summary(m_06)
+k.check(m_06)
+par(mfrow = c(2, 2))
+gam.check(m_06, pch = 16, cex = 0.5)
+par(mfrow = c(1, 1))
+plot(m_06, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
 # global level
 m_global <- gam(yield_rel ~  crop_unified +
               s(distance_to_tree_strip, k = 5, by = crop_unified) +
@@ -196,9 +236,63 @@ m_global <- gam(yield_rel ~  crop_unified +
               s(crop_season, bs = "re") +
               s(year, bs = "re"),
               data = moddata, method = "REML")
-
+summary(m_global)
+k.check(m_global)
+par(mfrow = c(2, 2))
+gam.check(m_global, pch = 16, cex = 0.5)
+par(mfrow = c(1, 1))
+plot(m_global, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
 
 AIC(m_00, m_01, m_02, m_03, m_04, m_05, m_06, m_global)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # -------------------------------------------------------------------------
