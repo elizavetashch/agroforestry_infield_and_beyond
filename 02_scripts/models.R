@@ -325,6 +325,7 @@ dflong <- dflong |>
 
 m_global <- gam(yield_rel ~ 
                   s(distance_to_tree_strip, k = 5)+
+                  ti(distance_to_tree_strip, treeage, k = c(5, 5)) +
                   s(R, by = SWF, k = 4) + 
                   l_shdi + l_ed + l_contag +  
                   treeage + 
@@ -389,3 +390,29 @@ summary(m_gl_system)
 
 
 # write.csv(dflong, file = "01_Data/20261009_moddata")
+
+
+
+# SCALE  ------------------------------------------------------------------
+dfscaled <- dflong
+vars <- c("distance_to_tree_strip","l_shdi", "l_ed", "l_contag", "treeage", "AFage", "PC1_c", "PC1_s")
+dfscaled[vars] <- lapply(dflong[vars], function(x) as.numeric(scale(x)))
+
+msc_global <- gam(yield_rel ~ 
+                  s(distance_to_tree_strip, k = 5)+
+                  s(R, by = SWF, k = 4) + 
+                  l_shdi + l_ed + l_contag +  
+                  treeage + 
+                  AFage +
+                  PC1_c +
+                  PC1_s +
+                  s(crop_season, bs = "re") +
+                  s(year, bs = "re"),
+                data = dfscaled, method = "REML")
+
+summary(msc_global)
+AIC(msc_global)
+gam.check(msc_global)
+k.check(msc_global)
+par(mfrow = c(2, 2))
+gam.check(msc_global, pch = 16, cex = 0.5)
