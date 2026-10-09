@@ -97,12 +97,113 @@ moddata$R   <- matrix(radii, nrow = nrow(moddata), ncol = length(radii), byrow =
 
 moddata <- select(moddata, -all_of(swf_cols))
 
-
+moddata$field <- as.factor(moddata$field)
+moddata$year <- as.factor(moddata$year)
+moddata$crop_unified <- as.factor(moddata$crop_unified)
+moddata$crop_season <- as.factor(moddata$crop_season)
 
 # models ------------------------------------------------------------------
 
+# H1: Distance changes the yield 
+m_00 <- gam(yield_rel ~  
+              s(distance_to_tree_strip, k = 5) +
+              s(field,bs = "re") +
+              s(crop_season, bs = "re") +
+              s(year, bs = "re"),
+            data = moddata, method = "REML")
 
 
+m_01 <- gam(yield_rel ~ crop_unified + 
+              s(distance_to_tree_strip, k = 5, by = crop_unified) +
+              s(field,bs = "re") +
+              s(crop_season,bs = "re") +
+              s(year, bs = "re"),
+            data = moddata, method = "REML")
+
+summary(m_01)
+k.check(m_01)
+par(mfrow = c(2, 2))
+gam.check(m_01, pch = 16, cex = 0.5)
+par(mfrow = c(1, 1))
+plot(m_01, shade = TRUE, shade.col = "lightblue",
+     seWithMean = TRUE, scale = 0, residuals = TRUE,
+     pch = 16, cex = 0.3, col = "grey50")
+
+
+
+# H2: Distance changes the yield but is modified by tree age 
+m_02 <- gam(yield_rel ~  crop_unified +
+              s(distance_to_tree_strip, k = 5, by = crop_unified) +
+              ti(distance_to_tree_strip, treeage, k = c(5,5)) +
+              s(field,bs = "re") +
+              s(crop_season,bs = "re") +
+              s(year, bs = "re"),
+            data = moddata, method = "REML")
+summary(m_02)
+
+# H3: SWF has an effect on yield 
+m_03 <- gam(yield_tha ~ crop_unified +
+             s(R, by = SWF, k = 4) +
+             s(field,bs = "re") +
+             s(crop_season,bs = "re") +
+             s(year, bs = "re"),
+           data = moddata, method = "REML")
+
+summary(m_03)
+# H4: adding swf to distance model will improve model performance
+m_04 <- gam(yield_rel ~ crop_unified + 
+              s(distance_to_tree_strip, k = 5, by = crop_unified) +
+              ti(distance_to_tree_strip, treeage, k = c(5,5)) +
+              s(R, by = SWF, k = 4) +
+              s(field,bs = "re") +
+              s(crop_season,bs = "re") +
+              s(year, bs = "re"),
+            data = moddata, method = "REML")
+
+summary(m_04)
+# H5: landscape composition and configuration has an effect on yield 
+m_05 <- gam(yield_rel ~  crop_unified +
+              l_shdi + l_contag + l_ed + 
+              s(field,bs = "re") +
+              s(crop_season,bs = "re") +
+              s(year, bs = "re"),
+            data = moddata, method = "REML")
+
+summary(m_05)
+# H6: adding landscape to the model will improve model performance
+m_06 <- gam(yield_rel ~  crop_unified +
+              s(distance_to_tree_strip, k = 5, by = crop_unified) +
+              ti(distance_to_tree_strip, treeage, k = c(5,5)) +
+              s(R, by = SWF, k = 4) +
+              l_shdi + l_contag + l_ed + 
+              s(field,bs = "re") +
+              s(crop_season,bs = "re") +
+              s(year, bs = "re"),
+            data = moddata, method = "REML")
+
+summary(m_05)
+# global level
+m_global <- gam(yield_rel ~  crop_unified +
+              s(distance_to_tree_strip, k = 5, by = crop_unified) +
+              ti(distance_to_tree_strip, treeage, k = c(5,5)) +
+              s(R, by = SWF, k = 4) +
+              l_shdi + l_contag + l_ed + 
+                treeage + 
+                AFage +
+                PC1_c +
+                PC1_s +
+              s(field, bs = "re") +
+              s(crop_season, bs = "re") +
+              s(year, bs = "re"),
+              data = moddata, method = "REML")
+
+
+AIC(m_00, m_01, m_02, m_03, m_04, m_05, m_06, m_global)
+
+
+# -------------------------------------------------------------------------
+# OLD SCRIPTS -------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 
 # models after conference 
